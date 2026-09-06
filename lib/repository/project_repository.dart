@@ -417,21 +417,23 @@ class ProjectRepository {
   }
 
   // Roots
-  Future<void> addRoot(String path) async {
+  /// Registers [path] as a scan root and returns the created [ScanRoot] so
+  /// callers can immediately scan just that folder (see
+  /// [importProjectsFromRoot]) without re-looking it up by path.
+  Future<ScanRoot> addRoot(String path) async {
     final id = _uuid.v4();
-    await rootsBox.put(
-      id,
-      ScanRoot(
-        id: id,
-        path: path,
-        addedAt: DateTime.now(),
-        // Auto-derived friendly label — see ScanRoot.displayName's doc for
-        // why this is needed on Linux/Flatpak (the stored path itself may
-        // be a sandboxed document-portal path, not the real location).
-        // User-editable afterward via setRootDisplayName.
-        displayName: p.basename(path),
-      ),
+    final root = ScanRoot(
+      id: id,
+      path: path,
+      addedAt: DateTime.now(),
+      // Auto-derived friendly label — see ScanRoot.displayName's doc for
+      // why this is needed on Linux/Flatpak (the stored path itself may
+      // be a sandboxed document-portal path, not the real location).
+      // User-editable afterward via setRootDisplayName.
+      displayName: p.basename(path),
     );
+    await rootsBox.put(id, root);
+    return root;
   }
 
   /// Sets (or, if [displayName] is null/blank, clears back to the

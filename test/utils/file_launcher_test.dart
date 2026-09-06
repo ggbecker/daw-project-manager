@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:daw_project_manager/utils/file_launcher_platform_io.dart';
@@ -71,5 +73,42 @@ void main() {
       // unescape step, so there is no double-decode to work around.
       expect(windowsNeedsDirectShellExecute('/Music/My%20Track.cpr'), isFalse);
     }, testOn: 'mac-os || linux');
+  });
+
+  // Regression test for the "Launch in DAW" failure on macOS for Logic Pro
+  // (.logicx) and Universal Audio LUNA (.luna) projects.
+  //
+  // Root cause: these DAWs save a project as a *directory* "package bundle",
+  // and the scanner stores that directory as project.filePath. launchProject()
+  // calls FileLauncher.launch(path, isFolder: false), and launchResolvedPath
+  // used to gate on `File(path).exists()` when isFolder was false — which is
+  // always false for a directory bundle, so the launch returned false before
+  // ever handing the path to the OS. Plain single-file projects (.als, .flp,
+  // …) were unaffected, which is why it looked DAW-specific.
+  //
+  // The fix accepts either a file or a directory at that path. The real
+  // launchUrl/NSWorkspace call can't run in a unit test, so this pins the
+  // check that was actually rejecting the bundle.
+  group('launchTargetExists', () {
+    late Directory tmp;
+
+    setUp(() => tmp = Directory.systemTemp.createTempSync('launch_target_test'));
+    tearDown(() => tmp.deleteSync(recursive: true));
+
+    test('is true for a package-bundle project directory (.logicx / .luna)', () {
+      final logicx = Directory('${tmp.path}/Song.logicx')..createSync();
+      final luna = Directory('${tmp.path}/Song.luna')..createSync();
+      expect(launchTargetExists(logicx.path), isTrue);
+      expect(launchTargetExists(luna.path), isTrue);
+    });
+
+    test('is true for a plain single-file project', () {
+      final flp = File('${tmp.path}/Song.flp')..writeAsStringSync('x');
+      expect(launchTargetExists(flp.path), isTrue);
+    });
+
+    test('is false when nothing exists at the path', () {
+      expect(launchTargetExists('${tmp.path}/does-not-exist.logicx'), isFalse);
+    });
   });
 }

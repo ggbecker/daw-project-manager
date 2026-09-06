@@ -5,7 +5,9 @@ import 'package:hive_ce/hive.dart';
 import 'package:trina_grid/trina_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+// hide TextDirection: intl exports its own (LTR/RTL) which would shadow the
+// dart:ui one that TextPainter needs (see dawColumnWidth).
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:flutter/foundation.dart'
     show debugPrint, kDebugMode, kIsWeb, listEquals, visibleForTesting;
 import 'package:flutter/services.dart';
@@ -820,8 +822,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       }
 
       // Show session-reconciliation dialogs for any resolved folders that had
-      // an active session stamp.
+      // an active session stamp — but only while session mode is on. With it
+      // off there is no session UI, so the "end and record / continue" prompt
+      // would be meaningless; the folders are already resolved and removed
+      // above, we just skip the prompt (equivalent to "continue").
       for (final pf in pendingWithSession) {
+        if (!ref.read(sessionModeProvider)) break;
         if (!resolved.contains(pf.id)) continue;
         if (!mounted) break;
         final sessionStart = pf.sessionStartedAt!;
@@ -1108,8 +1114,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   Future<void> _hideProjects(
     BuildContext context,
     WidgetRef ref,
-    List<String> selectedProjectIds,
-  ) async {
+    List<String> selectedProjectIds, {
+    // False when this call is itself the "Undo" of an unhide — the resulting
+    // snackbar then omits its own Undo action so the two don't ping-pong.
+    bool allowUndo = true,
+  }) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
       final allProjectsAsync = ref.read(allProjectsStreamProvider);
@@ -1122,14 +1131,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       }
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.projectsHidden(
+              l10n.projectsHidden(
                 selectedProjectIds.length,
                 selectedProjectIds.length == 1 ? '' : 's',
               ),
             ),
+            action: allowUndo
+                ? SnackBarAction(
+                    label: l10n.undo,
+                    onPressed: () => _unhideProjects(
+                      context,
+                      ref,
+                      selectedProjectIds,
+                      allowUndo: false,
+                    ),
+                  )
+                : null,
           ),
         );
         // Invalidate to refresh the list
@@ -1151,8 +1172,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
   Future<void> _unhideProjects(
     BuildContext context,
     WidgetRef ref,
-    List<String> selectedProjectIds,
-  ) async {
+    List<String> selectedProjectIds, {
+    // False when this call is itself the "Undo" of a hide (see _hideProjects).
+    bool allowUndo = true,
+  }) async {
     try {
       final repo = await ref.read(repositoryProvider.future);
       final allProjectsAsync = ref.read(allProjectsStreamProvider);
@@ -1202,14 +1225,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       }
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)!.projectsUnhidden(
+              l10n.projectsUnhidden(
                 selectedProjectIds.length,
                 selectedProjectIds.length == 1 ? '' : 's',
               ),
             ),
+            action: allowUndo
+                ? SnackBarAction(
+                    label: l10n.undo,
+                    onPressed: () => _hideProjects(
+                      context,
+                      ref,
+                      selectedProjectIds,
+                      allowUndo: false,
+                    ),
+                  )
+                : null,
           ),
         );
       }
@@ -5504,6 +5539,44 @@ class _GroupOrderStableRowGroupDelegate extends TrinaRowGroupTreeDelegate {
 /// entire grid with a brand new [TrinaGridStateManager] whose groups start
 /// out collapsed by default, with nothing left to read the old expand state
 /// back from.
+/// The "DAW" grid column label for a project: `"<DAW> <version>"` when a
+/// version is known (e.g. `"Logic Pro 12.3.1"`), just the DAW name otherwise,
+/// or empty when the DAW is unknown.
+@visibleForTesting
+String dawDisplayLabel(String? dawType, String? dawVersion) {
+  if (dawType == null || dawType.isEmpty) return '';
+  if (dawVersion != null && dawVersion.isNotEmpty) return '$dawType $dawVersion';
+  return dawType;
+}
+
+/// Width for the "DAW" grid column, sized to the widest `"<DAW> <version>"`
+/// label actually present in [labels] — measured with a [TextPainter] since
+/// the cell font is proportional — plus room for the DAW logo and cell
+/// padding. Clamped so a library of one short-named DAW can't make it
+/// vanish, and a stray long label can't let it hog the table. Recomputed
+/// each time the grid is (re)built, so it tracks the visible rows: this is
+/// what keeps e.g. "Logic Pro 12.3.1" from being clipped at the old fixed
+/// 140px.
+@visibleForTesting
+double dawColumnWidth(Iterable<String> labels) {
+  const style = TextStyle(fontSize: 14); // TrinaGrid's default cell text size
+  const chrome = 16.0 /*logo*/ + 6.0 /*logo gap*/ + 36.0 /*cell padding + slack*/;
+  var widest = 0.0;
+  for (final label in labels.toSet()) {
+    if (label.isEmpty) continue;
+    final painter = TextPainter(
+      text: TextSpan(text: label, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    if (painter.width > widest) widest = painter.width;
+  }
+  // 1.04×: TextPainter measures the raw glyph advance; the Text widget wants a
+  // hair more before it stops showing an ellipsis (sub-pixel rounding, the
+  // Flexible's constraint). A proportional bump keeps longer labels safe too.
+  return (widest * 1.04 + chrome).clamp(140.0, 280.0);
+}
+
 @visibleForTesting
 Set<String> expandedGroupNames(List<TrinaRow> rows) {
   return {
@@ -5997,7 +6070,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
       if (!mounted || confirmed != true) return;
       final picked = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        allowedExtensions: previewAudioExtensions,
         dialogTitle: l10n.selectPreviewSong,
       );
       if (!mounted || picked == null || picked.files.single.path == null)
@@ -6175,10 +6248,11 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
   }
 
   Future<void> _openProjectFolder(MusicProject project) async {
-    final String projectPath = project.filePath;
-    final String folderPath = FileSystemEntity.isDirectorySync(projectPath)
-        ? projectPath // Se for um diretório, usa o próprio caminho
-        : path.dirname(projectPath); // Se for um arquivo, usa o diretório pai
+    // A package-bundle project (.logicx/.luna/.band) is a directory, but
+    // revealing it would just launch the DAW — resolve to its parent. See
+    // ScannerService.projectContainingFolder.
+    final String folderPath =
+        ScannerService.projectContainingFolder(project.filePath);
 
     final exists = Directory(folderPath).existsSync();
     if (!exists) {
@@ -6596,11 +6670,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
       effectivePreviewPathFor(project);
 
   TrinaRow _projectToRow(MusicProject p) {
-    final dawDisplay = p.dawType != null
-        ? (p.dawVersion != null && p.dawVersion!.isNotEmpty
-              ? '${p.dawType} ${p.dawVersion}'
-              : p.dawType!)
-        : '';
+    final dawDisplay = dawDisplayLabel(p.dawType, p.dawVersion);
     return TrinaRow(
       cells: {
         'checkbox': TrinaCell(value: ''),
@@ -7141,7 +7211,9 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
         field: 'dawType',
         type: TrinaColumnType.text(),
         enableEditingMode: false,
-        width: 140,
+        width: dawColumnWidth(
+          widget.projects.map((p) => dawDisplayLabel(p.dawType, p.dawVersion)),
+        ),
         minWidth: 100,
         renderer: (rendererContext) {
           final project =
@@ -10049,11 +10121,10 @@ class _DesktopPlayerBarState extends ConsumerState<_DesktopPlayerBar> {
                         constraints: iconConstraints,
                         tooltip: l10n.openFolder,
                         onPressed: () async {
-                          final projectPath = project.filePath;
                           final folderPath =
-                              FileSystemEntity.isDirectorySync(projectPath)
-                              ? projectPath
-                              : path.dirname(projectPath);
+                              ScannerService.projectContainingFolder(
+                            project.filePath,
+                          );
                           if (Directory(folderPath).existsSync()) {
                             await FileLauncher.openFolder(folderPath);
                           }
@@ -10340,7 +10411,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       if (!mounted || confirmed != true) return;
       final picked = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        allowedExtensions: previewAudioExtensions,
         dialogTitle: l10n.selectPreviewSong,
       );
       if (!mounted || picked == null || picked.files.single.path == null)
@@ -12473,7 +12544,13 @@ class _PendingFolderRow extends ConsumerWidget {
                 MusicProject? sessionProject;
                 bool shouldSetActive = false;
 
-                if (sessionStart != null && context.mounted) {
+                // Only reconcile the session interactively while session mode
+                // is on — otherwise there is no session UI for the "end and
+                // record / continue" prompt to belong to. The folder still
+                // resolves and is removed below via bump().
+                if (sessionStart != null &&
+                    context.mounted &&
+                    ref.read(sessionModeProvider)) {
                   sessionProject = repo
                       .getAllProjects()
                       .where((p) => p.filePath.startsWith(pf.path))

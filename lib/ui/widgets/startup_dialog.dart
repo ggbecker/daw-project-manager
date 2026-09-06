@@ -6,6 +6,7 @@ import 'package:hive_ce/hive.dart';
 import '../../generated/l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../services/google_drive_sync_service.dart' show GoogleDriveSyncService;
+import '../../services/scan_import_service.dart';
 import '../../utils/mobile_utils.dart';
 import '../google_drive_sync_page.dart';
 import '../settings_page.dart';
@@ -50,13 +51,24 @@ class _StartupDialogState extends ConsumerState<_StartupDialog> {
     );
     if (picked == null || !mounted) return;
 
+    final container = ProviderScope.containerOf(context, listen: false);
     setState(() => _busy = true);
     try {
       final repo = await ref.read(repositoryProvider.future);
-      await repo.addRoot(picked);
-      ref.invalidate(rootsWatchProvider);
-      ref.invalidate(scanRootsProvider);
-      ref.invalidate(allProjectsStreamProvider);
+      final root = await repo.addRoot(picked);
+      container.invalidate(rootsWatchProvider);
+      container.invalidate(scanRootsProvider);
+      // Import the new folder's existing projects in the background — a large
+      // library must not freeze this dialog with no way out. It drives
+      // initialScanStateProvider so the dashboard we pop back to shows its
+      // normal "scanning" indicator; the project list fills in via its Hive
+      // stream. Without this the folder stays empty until a manual Rescan or
+      // the next launch (the background folder watcher only reacts to later
+      // filesystem changes).
+      container.read(initialScanStateProvider.notifier).setScanning(true);
+      importProjectsFromRoot(repo, root.id, root.path).whenComplete(
+        () => container.read(initialScanStateProvider.notifier).complete(),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

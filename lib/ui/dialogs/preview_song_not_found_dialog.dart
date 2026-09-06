@@ -9,11 +9,12 @@ import '../../providers/providers.dart';
 import '../../services/mixdown_detector_service.dart';
 import '../../utils/mobile_utils.dart';
 
-/// Audio extensions offered by the "select a new file" picker. Matches what
-/// the player can actually open.
-const List<String> previewAudioExtensions = [
-  'mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac',
-];
+/// Audio extensions offered by every "select a preview song" picker. Single
+/// source of truth in [MixdownDetectorService.audioExtensions] so the picker,
+/// mixdown auto-detection and drag-and-drop all accept the same set — AIFF
+/// (`.aif` / `.aiff`) included.
+final List<String> previewAudioExtensions =
+    MixdownDetectorService.audioPickerExtensions;
 
 /// What the user chose in [showPreviewSongNotFoundDialog]. A null return from
 /// the dialog means Cancel (or a barrier dismiss) — there is deliberately no

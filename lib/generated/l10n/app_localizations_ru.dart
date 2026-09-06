@@ -30,6 +30,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get confirm => 'Подтвердить';
 
   @override
+  String get undo => 'Отменить';
+
+  @override
   String get customInterval => 'Произвольный';
 
   @override

@@ -106,12 +106,24 @@ bool _shellExecuteOpen(String path) {
   }
 }
 
+/// Whether [path] points at something the OS can open — a regular file *or* a
+/// directory.
+///
+/// A macOS DAW "package" project (`.logicx`, `.luna`, `.band`) is a directory
+/// on disk even though Finder and `open` treat it like a file, so a plain
+/// `File(path).exists()` check wrongly rejects it and the launch never even
+/// starts. Both entity kinds are accepted regardless of the caller's
+/// `isFolder` hint — that hint only ever mattered for macOS bookmark
+/// resolution upstream, not here.
+@visibleForTesting
+bool launchTargetExists(String path) =>
+    File(path).existsSync() || Directory(path).existsSync();
+
 /// Checks existence and launches the path with url_launcher, except for
 /// Windows paths containing '#' or '%' which go through [_shellExecuteOpen]
 /// instead — see [windowsNeedsDirectShellExecute] for why.
 Future<bool> launchResolvedPath(String path, bool isFolder) async {
-  final entity = isFolder ? Directory(path) : File(path);
-  if (!await entity.exists()) {
+  if (!launchTargetExists(path)) {
     if (kDebugMode) print('[FileLauncher] ERROR: Path does not exist: $path');
     return false;
   }

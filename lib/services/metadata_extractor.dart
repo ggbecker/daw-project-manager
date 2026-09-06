@@ -80,6 +80,7 @@ class MetadataExtractor {
     '.rpp',
     '.mgd',
     '.flp',
+    '.logicx',
   };
 
   /// Whether [extractMetadata] has a real implementation for this project's
@@ -149,6 +150,11 @@ class MetadataExtractor {
       dawVersion = metadata.dawVersion ?? dawVersion;
     } else if (ext == '.flp') {
       final metadata = await _extractFromFlpFile(filePath);
+      bpm = metadata.bpm ?? bpm;
+      key = metadata.key ?? key;
+      dawVersion = metadata.dawVersion ?? dawVersion;
+    } else if (ext == '.logicx') {
+      final metadata = await _extractFromLogicFile(filePath);
       bpm = metadata.bpm ?? bpm;
       key = metadata.key ?? key;
       dawVersion = metadata.dawVersion ?? dawVersion;
@@ -549,6 +555,89 @@ class MetadataExtractor {
       return ProjectMetadata(bpm: bpm, dawVersion: dawVersion);
     } catch (e) {
       return ProjectMetadata();
+    }
+  }
+
+  /// Note names indexed by an integer [SongKey], for the rare Logic project
+  /// that stores the key as a number rather than the usual `"C"` string.
+  static const _logicKeyNotes = [
+    'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+  ];
+
+  /// Extracts BPM, key and the app version from a Logic Pro `.logicx`
+  /// project. `.logicx` is a macOS package *bundle* (a directory), so
+  /// [logicxPath] points at the folder, not a file:
+  ///
+  /// - `Alternatives/000/MetaData.plist` → `BeatsPerMinute`, `SongKey` +
+  ///   `SongGenderKey` ("major"/"minor").
+  /// - `Resources/ProjectInformation.plist` → `LastSavedFrom`, e.g.
+  ///   `"Logic Pro Creator Studio 12.3.1 (6682)"`.
+  ///
+  /// Both are Apple property lists (normally binary), read via `plutil`.
+  /// Logic Pro is macOS-only, so that tool is always present there; a
+  /// `.logicx` synced to another OS just yields nothing, like any DAW we
+  /// can't parse yet.
+  static Future<ProjectMetadata> _extractFromLogicFile(String logicxPath) async {
+    if (!Platform.isMacOS) return ProjectMetadata();
+    try {
+      double? bpm;
+      String? key;
+      String? dawVersion;
+
+      final meta = await _readApplePlist(
+        p.join(logicxPath, 'Alternatives', '000', 'MetaData.plist'),
+      );
+      if (meta != null) {
+        final rawBpm = meta['BeatsPerMinute'];
+        if (rawBpm is num && rawBpm > 0) bpm = rawBpm.toDouble();
+
+        final rawKey = meta['SongKey'];
+        String? note;
+        if (rawKey is String && rawKey.trim().isNotEmpty) {
+          note = rawKey.trim();
+        } else if (rawKey is int &&
+            rawKey >= 0 &&
+            rawKey < _logicKeyNotes.length) {
+          note = _logicKeyNotes[rawKey];
+        }
+        if (note != null) {
+          final minor =
+              (meta['SongGenderKey'] as String?)?.toLowerCase() == 'minor';
+          key = '$note ${minor ? 'minor' : 'major'}';
+        }
+      }
+
+      final info = await _readApplePlist(
+        p.join(logicxPath, 'Resources', 'ProjectInformation.plist'),
+      );
+      final lastSavedFrom = info?['LastSavedFrom'];
+      if (lastSavedFrom is String && lastSavedFrom.isNotEmpty) {
+        // "Logic Pro Creator Studio 12.3.1 (6682)" -> "12.3.1"
+        final m = RegExp(r'\d+(?:\.\d+){1,2}').firstMatch(lastSavedFrom);
+        dawVersion = m?.group(0) ?? lastSavedFrom.trim();
+      }
+
+      return ProjectMetadata(bpm: bpm, key: key, dawVersion: dawVersion);
+    } catch (e) {
+      return ProjectMetadata();
+    }
+  }
+
+  /// Reads an Apple property list at [path] into a map by shelling out to
+  /// `plutil -convert json`. Returns null if the file is missing, `plutil`
+  /// is unavailable (non-macOS), or the result isn't a JSON object.
+  static Future<Map<String, dynamic>?> _readApplePlist(String path) async {
+    try {
+      if (!File(path).existsSync()) return null;
+      final result = await Process.run(
+        'plutil',
+        ['-convert', 'json', '-o', '-', path],
+      );
+      if (result.exitCode != 0) return null;
+      final decoded = jsonDecode(result.stdout as String);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
     }
   }
 

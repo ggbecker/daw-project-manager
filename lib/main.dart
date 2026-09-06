@@ -343,6 +343,20 @@ MusicProject? findProjectForPendingFolder(
       .firstOrNull;
 }
 
+/// Whether resolving a pending folder should auto-resume its tracked session
+/// (activate the project and start its work timer from [sessionStartedAt]).
+/// Only when session mode is on AND the folder was actually stamped for
+/// session tracking — a stamp can outlive the user turning session mode off,
+/// and starting a session they never asked for is worse than dropping the
+/// stray stamp. Kept pure so the rule is regression-testable; the folder
+/// watcher itself isn't.
+@visibleForTesting
+bool shouldResumeSessionOnResolve({
+  required bool sessionModeOn,
+  required DateTime? sessionStartedAt,
+}) =>
+    sessionModeOn && sessionStartedAt != null;
+
 /// Runs a targeted, diff-based scan of just [rootPath] — much lighter than
 /// the full-root walk in `_runInitialScan`/`_scanAll`, since it skips any
 /// path already known to the repository (no wasted metadata re-extraction)
@@ -402,19 +416,30 @@ Future<void> _onFolderWatcherActivity(
     // project had already appeared in the list). This never pops the
     // interactive "end and record / continue" dialog (that stays
     // manual-only, in DashboardPage._scanAll and the pending-row Refresh
-    // action) — it always takes the equivalent of "continue": the timer
-    // keeps running under the resolved project, uninterrupted. That's safe
-    // even if a different project is currently active, since switching
+    // action).
+    //
+    // When session mode is on it takes the equivalent of "continue": the
+    // timer keeps running under the resolved project, uninterrupted. That's
+    // safe even if a different project is currently active, since switching
     // activeProjectProvider auto-saves the outgoing project's elapsed time
-    // as its own SessionRecord first (see WorkTimerNotifier.build's listener).
+    // as its own SessionRecord first (see WorkTimerNotifier.build's
+    // listener). When session mode is off there is no session UI, so the
+    // folder just resolves — auto-activating a project and starting its
+    // timer here would silently begin a session the user never asked for
+    // (the stamp can predate them turning session mode off).
     final resolvable = repo
         .getPendingFolders()
         .where((pf) => !pf.folderExists || pf.hasProjectFile())
         .toList(growable: false);
     if (resolvable.isNotEmpty) {
+      final sessionModeOn = container.read(sessionModeProvider);
       for (final pf in resolvable) {
         final sessionStart = pf.sessionStartedAt;
-        if (sessionStart != null) {
+        if (sessionStart != null &&
+            shouldResumeSessionOnResolve(
+              sessionModeOn: sessionModeOn,
+              sessionStartedAt: sessionStart,
+            )) {
           final project = findProjectForPendingFolder(
             repo.getAllProjects(),
             pf.path,

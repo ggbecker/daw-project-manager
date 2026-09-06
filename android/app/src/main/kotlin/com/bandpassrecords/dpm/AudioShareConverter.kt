@@ -1,12 +1,15 @@
 package com.bandpassrecords.dpm
 
+import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import java.io.File
+import java.io.RandomAccessFile
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Transcodes an audio file to AAC in an `.m4a` container, using only the
@@ -23,8 +26,12 @@ import java.nio.ByteBuffer
  * same reason — Apple ships no MP3 encoder either — so `.m4a` is a format
  * this app has been sending from Macs all along.
  *
- * Supported inputs are whatever `MediaExtractor` can open: WAV and FLAC yes,
- * AIFF no. Callers fall back to sharing the original file when this throws.
+ * WAV is read straight from its RIFF header rather than through
+ * `MediaExtractor` — that extractor rejects a lot of perfectly valid PCM
+ * WAV on many devices (`setDataSource failed`), and it never handles 24-bit
+ * or 32-bit-float bounces, which is what DAWs actually export. Everything
+ * else still goes through `MediaExtractor` (FLAC yes, AIFF no). Callers fall
+ * back to sharing the original file when this throws.
  */
 object AudioShareConverter {
 
@@ -46,10 +53,193 @@ object AudioShareConverter {
         val output = File(outputPath)
         output.parentFile?.mkdirs()
         try {
-            transcode(inputPath, outputPath)
+            if (inputPath.substringAfterLast('.', "").lowercase() == "wav") {
+                transcodeWav(inputPath, outputPath)
+            } else {
+                transcode(inputPath, outputPath)
+            }
         } catch (e: Throwable) {
             output.delete()
             throw e
+        }
+    }
+
+    // ── WAV path ────────────────────────────────────────────────────────────
+    // Parse the header ourselves, feed the PCM straight to the AAC encoder.
+
+    private data class WavInfo(
+        /** 1 = PCM integer, 3 = IEEE float. */
+        val audioFormat: Int,
+        val sampleRate: Int,
+        val channelCount: Int,
+        val bitsPerSample: Int,
+        val dataOffset: Long,
+        val dataSize: Long,
+    )
+
+    private fun leU16(b: ByteArray, off: Int): Int =
+        (b[off].toInt() and 0xFF) or ((b[off + 1].toInt() and 0xFF) shl 8)
+
+    private fun leU32(b: ByteArray, off: Int): Long =
+        (b[off].toLong() and 0xFF) or
+            ((b[off + 1].toLong() and 0xFF) shl 8) or
+            ((b[off + 2].toLong() and 0xFF) shl 16) or
+            ((b[off + 3].toLong() and 0xFF) shl 24)
+
+    private fun readWavInfo(path: String): WavInfo {
+        RandomAccessFile(path, "r").use { raf ->
+            val riff = ByteArray(12)
+            raf.readFully(riff)
+            require(
+                String(riff, 0, 4, Charsets.US_ASCII) == "RIFF" &&
+                    String(riff, 8, 4, Charsets.US_ASCII) == "WAVE",
+            ) { "Not a RIFF/WAVE file" }
+
+            var af = 1
+            var sr = 0
+            var ch = 0
+            var bps = 0
+            var dataOffset = -1L
+            var dataSize = -1L
+
+            val hdr = ByteArray(8)
+            while (raf.filePointer + 8 <= raf.length()) {
+                raf.readFully(hdr)
+                val id = String(hdr, 0, 4, Charsets.US_ASCII)
+                val size = leU32(hdr, 4)
+                val bodyStart = raf.filePointer
+                when (id) {
+                    "fmt " -> {
+                        val body = ByteArray(size.toInt().coerceAtLeast(16))
+                        raf.readFully(body, 0, minOf(size.toInt(), body.size))
+                        af = leU16(body, 0)
+                        ch = leU16(body, 2)
+                        sr = leU32(body, 4).toInt()
+                        bps = leU16(body, 14)
+                        // WAVE_FORMAT_EXTENSIBLE — the real format tag is the
+                        // first 2 bytes of the SubFormat GUID.
+                        if (af == 0xFFFE && size >= 26) af = leU16(body, 24)
+                    }
+                    "data" -> {
+                        dataOffset = bodyStart
+                        dataSize = size
+                    }
+                }
+                // RIFF chunks are word-aligned.
+                raf.seek(bodyStart + size + (size and 1L))
+                if (dataOffset >= 0 && sr > 0) break
+            }
+
+            require(sr > 0 && ch > 0 && bps > 0 && dataOffset >= 0) {
+                "Malformed WAV header (rate=$sr ch=$ch bits=$bps)"
+            }
+            if (dataSize <= 0 || dataOffset + dataSize > raf.length()) {
+                dataSize = raf.length() - dataOffset
+            }
+            return WavInfo(af, sr, ch, bps, dataOffset, dataSize)
+        }
+    }
+
+    /** Converts [len] bytes of interleaved WAV samples in [src] to 16-bit LE PCM. */
+    private fun toPcm16(src: ByteArray, len: Int, wav: WavInfo): ByteArray {
+        val srcBps = wav.bitsPerSample / 8
+        if (wav.audioFormat == 1 && wav.bitsPerSample == 16) {
+            return if (len == src.size) src else src.copyOf(len)
+        }
+        val samples = len / srcBps
+        val out = ByteArray(samples * 2)
+        val ob = ByteBuffer.wrap(out).order(ByteOrder.LITTLE_ENDIAN)
+        when {
+            wav.audioFormat == 3 && wav.bitsPerSample == 32 -> {
+                val fb = ByteBuffer.wrap(src, 0, len).order(ByteOrder.LITTLE_ENDIAN)
+                repeat(samples) {
+                    val v = (fb.float.coerceIn(-1f, 1f) * 32767f).toInt()
+                    ob.putShort(v.toShort())
+                }
+            }
+            wav.audioFormat == 1 && wav.bitsPerSample == 24 -> {
+                var p = 0
+                repeat(samples) {
+                    val s24 = (src[p + 2].toInt() shl 16) or
+                        ((src[p + 1].toInt() and 0xFF) shl 8) or
+                        (src[p].toInt() and 0xFF)
+                    ob.putShort((s24 shr 8).toShort())
+                    p += 3
+                }
+            }
+            wav.audioFormat == 1 && wav.bitsPerSample == 32 -> {
+                val ib = ByteBuffer.wrap(src, 0, len).order(ByteOrder.LITTLE_ENDIAN)
+                repeat(samples) { ob.putShort((ib.int shr 16).toShort()) }
+            }
+            wav.audioFormat == 1 && wav.bitsPerSample == 8 -> {
+                var p = 0
+                repeat(samples) {
+                    ob.putShort((((src[p].toInt() and 0xFF) - 128) shl 8).toShort())
+                    p++
+                }
+            }
+            else -> throw IllegalArgumentException(
+                "Unsupported WAV sample format ${wav.audioFormat}/${wav.bitsPerSample}-bit",
+            )
+        }
+        return out
+    }
+
+    /**
+     * Rewrites the input as a canonical 44-byte-header, 16-bit PCM WAV in a
+     * temp file, then hands it to the shared [transcode] path (whose raw
+     * branch handles `audio/raw`).
+     *
+     * Always rewriting — not just for 24-bit / float / 8-bit — means the
+     * extractor only ever sees a textbook header, so an odd chunk order or a
+     * `WAVE_FORMAT_EXTENSIBLE` `fmt ` block can't be what trips it.
+     */
+    private fun transcodeWav(inputPath: String, outputPath: String) {
+        val wav = readWavInfo(inputPath)
+        val normalised =
+            File.createTempFile("wav16_", ".wav", File(outputPath).parentFile)
+        try {
+            writeCanonical16BitWav(inputPath, wav, normalised)
+            transcode(normalised.path, outputPath)
+        } finally {
+            normalised.delete()
+        }
+    }
+
+    private fun wavHeader16(sampleRate: Int, channels: Int, dataSize: Long): ByteArray {
+        val buf = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN)
+        buf.put("RIFF".toByteArray(Charsets.US_ASCII))
+        buf.putInt((36 + dataSize).toInt())
+        buf.put("WAVE".toByteArray(Charsets.US_ASCII))
+        buf.put("fmt ".toByteArray(Charsets.US_ASCII))
+        buf.putInt(16)
+        buf.putShort(1) // PCM
+        buf.putShort(channels.toShort())
+        buf.putInt(sampleRate)
+        buf.putInt(sampleRate * channels * 2) // byte rate
+        buf.putShort((channels * 2).toShort()) // block align
+        buf.putShort(16) // bits per sample
+        buf.put("data".toByteArray(Charsets.US_ASCII))
+        buf.putInt(dataSize.toInt())
+        return buf.array()
+    }
+
+    private fun writeCanonical16BitWav(inputPath: String, wav: WavInfo, out: File) {
+        val srcBlock = (wav.bitsPerSample / 8) * wav.channelCount
+        val readBuf = ByteArray(maxOf(1, 256 * 1024 / srcBlock) * srcBlock)
+        val data16Size = wav.dataSize / (wav.bitsPerSample / 8) * 2
+        RandomAccessFile(inputPath, "r").use { raf ->
+            raf.seek(wav.dataOffset)
+            out.outputStream().buffered().use { os ->
+                os.write(wavHeader16(wav.sampleRate, wav.channelCount, data16Size))
+                var remaining = wav.dataSize
+                while (remaining > 0) {
+                    val toRead = minOf(remaining, readBuf.size.toLong()).toInt()
+                    raf.readFully(readBuf, 0, toRead)
+                    remaining -= toRead
+                    os.write(toPcm16(readBuf, toRead, wav))
+                }
+            }
         }
     }
 
@@ -82,6 +272,16 @@ object AudioShareConverter {
                             MediaCodecInfo.CodecProfileLevel.AACObjectLC,
                         )
                         setInteger(MediaFormat.KEY_BIT_RATE, bitRateFor(channelCount))
+                        // The Codec2 AAC encoder on newer Android otherwise
+                        // rejected every raw-PCM input buffer ("discarded an
+                        // unknown buffer", 0-byte output): it needs the input
+                        // PCM encoding spelled out, and a max input size big
+                        // enough that we're not fighting the 2 KB default.
+                        setInteger(
+                            MediaFormat.KEY_PCM_ENCODING,
+                            AudioFormat.ENCODING_PCM_16BIT,
+                        )
+                        setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 64 * 1024)
                     },
                     null,
                     null,

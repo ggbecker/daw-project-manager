@@ -46,4 +46,43 @@ void main() {
       expect(findProjectForPendingFolder([], '/Music/New Song'), isNull);
     });
   });
+
+  group('shouldResumeSessionOnResolve', () {
+    // Regression: when a session-tracked pending folder resolved, the folder
+    // watcher activated the project and started its work timer regardless of
+    // the session mode setting — so a user who created the folder with
+    // session mode on, then turned it off, got a session started for them
+    // when the project file finally appeared.
+    final start = DateTime(2026, 1, 1, 10);
+
+    test('true only when session mode is on and the folder was stamped', () {
+      expect(
+        shouldResumeSessionOnResolve(
+          sessionModeOn: true,
+          sessionStartedAt: start,
+        ),
+        isTrue,
+      );
+    });
+
+    test('false when session mode is off, even with a stamp', () {
+      expect(
+        shouldResumeSessionOnResolve(
+          sessionModeOn: false,
+          sessionStartedAt: start,
+        ),
+        isFalse,
+      );
+    });
+
+    test('false when the folder was never stamped for session tracking', () {
+      expect(
+        shouldResumeSessionOnResolve(
+          sessionModeOn: true,
+          sessionStartedAt: null,
+        ),
+        isFalse,
+      );
+    });
+  });
 }

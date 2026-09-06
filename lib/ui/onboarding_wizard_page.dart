@@ -9,6 +9,7 @@ import '../generated/l10n/app_localizations.dart';
 import '../providers/providers.dart';
 import '../providers/theme_provider.dart';
 import '../services/auto_start_service.dart';
+import '../services/scan_import_service.dart';
 import '../services/update_check_service.dart';
 import '../utils/mobile_utils.dart';
 import 'dashboard_page.dart' show DashboardPage;
@@ -427,13 +428,23 @@ class _FoldersPageState extends ConsumerState<_FoldersPage> {
       dialogTitle: widget.l10n.selectProjectsFolder,
     );
     if (picked == null || !mounted) return;
+    final container = ProviderScope.containerOf(context, listen: false);
     setState(() => _busy = true);
     try {
       final repo = await ref.read(repositoryProvider.future);
-      await repo.addRoot(picked);
-      ref.invalidate(rootsWatchProvider);
-      ref.invalidate(scanRootsProvider);
-      ref.invalidate(allProjectsStreamProvider);
+      final root = await repo.addRoot(picked);
+      container.invalidate(rootsWatchProvider);
+      container.invalidate(scanRootsProvider);
+      // Import the new folder's existing projects in the background instead
+      // of blocking this step: the wizard shows no project list, the user
+      // still has several steps to go, and a large library could take a
+      // while. It drives initialScanStateProvider, so if the dashboard opens
+      // before the scan finishes it shows the normal "scanning" indicator;
+      // the project list (a Hive stream) fills in on its own when done.
+      container.read(initialScanStateProvider.notifier).setScanning(true);
+      importProjectsFromRoot(repo, root.id, root.path).whenComplete(
+        () => container.read(initialScanStateProvider.notifier).complete(),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -72,6 +72,31 @@ dependencies:
   oauth2: ^2.0.3
   crypto: ^3.0.5
   share_plus: ^12.0.2
+  # Android/iOS ffmpeg, used only by AudioAnalysisService.convertForSharing to
+  # turn a WAV/AIFF/FLAC bounce into an MP3 before sharing (WhatsApp silently
+  # drops WAV). The "_audio" variant is the smallest one that ships LAME
+  # (libmp3lame); LGPL-3.0, no GPL components. Desktop shells out to a
+  # bundled/PATH ffmpeg instead — Process.run can't spawn a subprocess on
+  # Android.
+  #
+  # We tried replacing this with a MediaCodec Kotlin transcoder (commit
+  # 6b4bd92) to shrink the APK and drop a build-time network dependency, but
+  # the Codec2 AAC encoder rejects raw-PCM input on newer Android
+  # ("discarded an unknown buffer", 0-byte output), so it never worked on
+  # device. Back to ffmpeg-kit.
+  #
+  # CAUTION: this plugin also declares windows/linux/macos. Their CMakeLists
+  # download a ~19 MB prebuilt ffmpeg bundle from GitHub at *configure* time
+  # and hard-fail (FATAL_ERROR) if that download can't happen, so a desktop
+  # build now needs network at build time. CI's Windows/macOS/Linux-tarball
+  # builds have network, so they just get slower and ~15 MB fatter with
+  # ffmpeg libs nothing calls. The offline Flathub build can't download at
+  # all — it swaps this plugin's Linux native side for a no-op stub (see
+  # flatpak/ffmpeg_kit_linux_stub/ and the `cp` in
+  # flatpak/com.bandpassrecords.dpm.yml), which is safe because nothing
+  # calls ffmpeg-kit on Linux (AudioAnalysisService.convertForSharing shells
+  # out to a PATH ffmpeg there instead).
+  ffmpeg_kit_flutter_new_audio: ^2.5.2
   flutter_secure_storage: ^10.0.0
   flutter_local_notifications: ^22.0.0
   timezone: ^0.11.0
@@ -112,6 +137,16 @@ dependency_overrides:
   # third_party/windows_taskbar/PATCHES.md and issue #119.
   windows_taskbar:
     path: third_party/windows_taskbar
+  # ffmpeg_kit_flutter_new_audio is only ever called in-process on Android and
+  # iOS (AudioAnalysisService._usesInProcessFfmpeg). Its published desktop
+  # native layers each download a ~19 MB prebuilt ffmpeg bundle at build time
+  # (linux/windows CMake) or vendor unsigned .framework bundles that fail
+  # CodeSign in CI (macos) — all for code no desktop build path calls. This
+  # vendored copy keeps android/ios identical to upstream and stubs
+  # linux/macos/windows to a no-op plugin. See
+  # third_party/ffmpeg_kit_flutter_new_audio/README-vendor.md.
+  ffmpeg_kit_flutter_new_audio:
+    path: third_party/ffmpeg_kit_flutter_new_audio
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

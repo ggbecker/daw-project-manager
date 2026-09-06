@@ -154,6 +154,12 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get confirm;
 
+  /// Snackbar action to reverse the action just performed (e.g. hiding projects)
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
   /// No description provided for @customInterval.
   ///
   /// In en, this message translates to:
@@ -7349,10 +7355,10 @@ abstract class AppLocalizations {
   /// **'Some DAWs prefix project files with the date they were created (for example \"2026-08-02 - My Track\"). Hide it so only the title is shown. The files themselves are never renamed.'**
   String get hideDatesInNamesDescription;
 
-  /// Button in the missing preview song dialog: clear the dead reference and re-run mixdown detection
+  /// Button that scans the project's mixdown folders for a preview song: in the missing-preview dialog and in the project-detail player
   ///
   /// In en, this message translates to:
-  /// **'Find automatically'**
+  /// **'Auto-Find'**
   String get findPreviewAutomatically;
 
   /// Snackbar shown when automatic preview detection finds nothing

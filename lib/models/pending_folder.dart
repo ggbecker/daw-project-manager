@@ -36,16 +36,20 @@ class PendingFolder {
 
   bool get folderExists => Directory(path).existsSync();
 
-  // True if the folder contains a recognised DAW project file anywhere inside it.
+  // True if the folder contains a recognised DAW project anywhere inside it.
   bool hasProjectFile() {
     if (!folderExists) return false;
 
     try {
       for (final entry in Directory(path).listSync(recursive: true)) {
-        if (entry is File &&
-            ScannerService.supportedExtensions.contains(
-              p.extension(entry.path).toLowerCase(),
-            )) {
+        final ext = p.extension(entry.path).toLowerCase();
+        if (!ScannerService.supportedExtensions.contains(ext)) continue;
+        // A single-file project is a File; Logic Pro (.logicx), LUNA (.luna)
+        // and GarageBand (.band) save the project as a directory "package
+        // bundle", so a plain `entry is File` check never resolves those —
+        // the "waiting for project file" state would stick forever.
+        if (entry is File) return true;
+        if (entry is Directory && ScannerService.isBundlePath(entry.path)) {
           return true;
         }
       }

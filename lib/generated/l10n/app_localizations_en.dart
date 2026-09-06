@@ -30,6 +30,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm => 'Confirm';
 
   @override
+  String get undo => 'Undo';
+
+  @override
   String get customInterval => 'Custom';
 
   @override
@@ -4330,7 +4333,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Some DAWs prefix project files with the date they were created (for example \"2026-08-02 - My Track\"). Hide it so only the title is shown. The files themselves are never renamed.';
 
   @override
-  String get findPreviewAutomatically => 'Find automatically';
+  String get findPreviewAutomatically => 'Auto-Find';
 
   @override
   String get noPreviewSongFoundAutomatically =>

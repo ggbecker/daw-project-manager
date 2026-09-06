@@ -10,9 +10,20 @@ import '../utils/mobile_utils.dart';
 class MixdownDetectorService {
   MixdownDetectorService._();
 
-  static const Set<String> _audioExtensions = {
+  /// Audio file extensions (leading dot, lowercase) the app treats as a
+  /// playable "song": mixdown auto-detection, the preview-song picker,
+  /// drag-and-drop, release-file typing, waveform rendering. Every one of
+  /// these decodes on macOS/iOS via AVFoundation and on desktop via the
+  /// bundled ffmpeg fallback — including AIFF (`.aif` / `.aiff`).
+  static const Set<String> audioExtensions = {
     '.wav', '.mp3', '.flac', '.aif', '.aiff', '.aac', '.m4a', '.ogg',
   };
+
+  /// [audioExtensions] without the leading dot, for
+  /// `FilePicker.allowedExtensions` which wants bare extensions.
+  static final List<String> audioPickerExtensions = audioExtensions
+      .map((e) => e.substring(1))
+      .toList(growable: false);
 
   // Matches this app's own Drive-download filenames — "<uuid>_preview.<ext>" —
   // written by GoogleDriveSyncService.downloadPreviewSongFile into a single
@@ -85,7 +96,7 @@ class MixdownDetectorService {
           .listSync()
           .whereType<File>()
           .where((f) =>
-              _audioExtensions.contains(p.extension(f.path).toLowerCase()))
+              audioExtensions.contains(p.extension(f.path).toLowerCase()))
           .toList();
 
       if (files.isEmpty) continue;
@@ -116,7 +127,7 @@ class MixdownDetectorService {
     final files = current.parent
         .listSync()
         .whereType<File>()
-        .where((f) => _audioExtensions.contains(p.extension(f.path).toLowerCase()))
+        .where((f) => audioExtensions.contains(p.extension(f.path).toLowerCase()))
         .toList();
     if (files.isEmpty) return null;
     files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));

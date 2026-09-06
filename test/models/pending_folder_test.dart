@@ -80,6 +80,32 @@ void main() {
       expect(_folder(dir.path).hasProjectFile(), isTrue);
     });
 
+    // Regression: Logic Pro (.logicx), LUNA (.luna) and GarageBand (.band)
+    // save the project as a *directory* package bundle, not a file. The old
+    // `entry is File` check never matched one, so a folder created via
+    // "Create" that the user then saved a Logic project into stayed stuck on
+    // "waiting for project file" forever.
+    test('returns true when the project is a .logicx bundle DIRECTORY', () async {
+      final dir = await Directory.systemTemp.createTemp('pf_logicx_dir_');
+      addTearDown(() => dir.delete(recursive: true));
+
+      final bundle = Directory(p.join(dir.path, 'My Song.logicx'));
+      await bundle.create();
+      await File(p.join(bundle.path, 'ProjectData')).create();
+
+      expect(_folder(dir.path).hasProjectFile(), isTrue);
+    });
+
+    test('returns true when a .luna bundle DIRECTORY sits in a subfolder', () async {
+      final dir = await Directory.systemTemp.createTemp('pf_luna_dir_');
+      addTearDown(() => dir.delete(recursive: true));
+
+      final sub = await Directory(p.join(dir.path, 'Session')).create();
+      await Directory(p.join(sub.path, 'Track.luna')).create();
+
+      expect(_folder(dir.path).hasProjectFile(), isTrue);
+    });
+
     test('returns true when DAW file is inside a subdirectory', () async {
       final dir = await Directory.systemTemp.createTemp('pf_sub_');
       addTearDown(() => dir.delete(recursive: true));

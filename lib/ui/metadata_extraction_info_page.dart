@@ -45,7 +45,7 @@ const _dawExtractionInfo = [
   _DawExtractionInfo('FL Studio', bpm: true, key: false, version: true, notes: false),
   _DawExtractionInfo('GarageBand', bpm: false, key: false, version: false, notes: false),
   _DawExtractionInfo('LMMS', bpm: false, key: false, version: false, notes: false),
-  _DawExtractionInfo('Logic Pro', bpm: false, key: false, version: false, notes: false),
+  _DawExtractionInfo('Logic Pro', bpm: true, key: true, version: true, notes: false),
   _DawExtractionInfo('MAGDA', bpm: true, key: true, version: true, notes: false),
   _DawExtractionInfo('Maschine', bpm: false, key: false, version: false, notes: false),
   _DawExtractionInfo('Mixcraft', bpm: false, key: false, version: false, notes: false),

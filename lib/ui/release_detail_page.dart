@@ -14,6 +14,7 @@ import 'package:archive/archive.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/release.dart';
 import '../services/audio_analysis_service.dart';
+import '../services/mixdown_detector_service.dart';
 import 'widgets/desktop_title_bar.dart';
 import '../models/release_file.dart';
 import '../models/music_project.dart';
@@ -120,7 +121,7 @@ class _ReleaseDetailPageState extends ConsumerState<ReleaseDetailPage>
 
   String _getFileType(String fileName) {
     final ext = path.extension(fileName).toLowerCase();
-    if (['.wav', '.mp3', '.flac', '.aac', '.ogg', '.m4a'].contains(ext)) {
+    if (MixdownDetectorService.audioExtensions.contains(ext)) {
       return 'audio';
     } else if (['.mp4', '.mov', '.avi', '.mkv', '.webm'].contains(ext)) {
       return 'video';

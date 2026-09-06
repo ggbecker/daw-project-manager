@@ -24,7 +24,7 @@ import '../services/mixdown_detector_service.dart';
 import '../services/project_parts_csv_export_service.dart';
 import '../services/project_parts_xlsx_export_service.dart';
 import '../services/project_text_export_service.dart';
-import '../services/scanner_service.dart';
+import '../services/scan_import_service.dart';
 import '../services/update_check_service.dart';
 import '../utils/daw_logo.dart';
 import '../utils/file_launcher.dart';
@@ -518,20 +518,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<void> _scanOnlyFolder(ProjectRepository repo, String folderId, String folderPath) async {
-    final scanner = ScannerService();
-    final excluded = repo.getIgnoredPaths().map((p) => p.path).toList(growable: false);
-    final scanTime = DateTime.now();
-    int found = 0;
-
-    final entities = <FileSystemEntity>[];
-    await for (final entity in scanner.scanDirectory(folderPath, ignoredPaths: excluded)) {
-      entities.add(entity);
-    }
-    if (entities.isNotEmpty) {
-      await repo.upsertManyFromFileSystemEntities(entities, fullMetadata: false);
-      found += entities.length;
-    }
-    await repo.updateRootLastScanAt(folderId, scanTime);
+    final found = await importProjectsFromRoot(repo, folderId, folderPath);
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -563,16 +550,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     setState(() => _busy = true);
     try {
       final repo = await ref.read(repositoryProvider.future);
-      await repo.addRoot(picked);
+      final root = await repo.addRoot(picked);
 
       ref.invalidate(rootsWatchProvider);
       ref.invalidate(scanRootsProvider);
 
       // Scan only the newly-added folder
-      final added = repo.getRoots().where((r) => r.path == picked).toList();
-      if (added.isNotEmpty) {
-        await _scanOnlyFolder(repo, added.first.id, added.first.path);
-      }
+      await _scanOnlyFolder(repo, root.id, root.path);
 
       ref.invalidate(allProjectsStreamProvider);
     } catch (e) {

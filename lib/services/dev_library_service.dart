@@ -47,16 +47,15 @@ class DevLibraryService {
   static const String selectionFileName =
       '$defaultAppDataDirName.selected-library';
 
-  /// The directory the candidates live in: `%LOCALAPPDATA%` on Windows, the
-  /// parent of the application-support directory elsewhere.
-  static Future<Directory> resolveRoot() async {
-    if (Platform.isWindows) {
-      final localAppData = Platform.environment['LOCALAPPDATA'];
-      if (localAppData != null) return Directory(localAppData);
-    }
-    final appData = await getLocalAppDataPath();
-    return Directory(p.dirname(appData));
-  }
+  /// The directory the candidate libraries — and this build's remembered
+  /// choice — live directly under: `%LOCALAPPDATA%` on Windows, the OS
+  /// application-support directory elsewhere.
+  ///
+  /// Must not depend on the current library selection: the choice is written
+  /// here before one is made and read back here afterwards, so a moving root
+  /// silently loses it (and left "Ask again next launch" permanently
+  /// disabled). See [getAppSupportRoot].
+  static Future<Directory> resolveRoot() => getAppSupportRoot();
 
   /// Every candidate library under [root], release first, then the dev one,
   /// then any others (per-pull-request directories left by a tester build).
@@ -79,14 +78,7 @@ class DevLibraryService {
     }
 
     for (final name in [defaultAppDataDirName, '${defaultAppDataDirName}_dev']) {
-      found.putIfAbsent(
-        name,
-        () => DevLibrary(
-          dirName: name,
-          isRelease: name == defaultAppDataDirName,
-          exists: false,
-        ),
-      );
+      found.putIfAbsent(name, () => _resolveKnownLibrary(root, name));
     }
 
     final ordered = found.values.toList()
@@ -98,6 +90,34 @@ class DevLibraryService {
         return a.dirName.compareTo(b.dirName);
       });
     return ordered;
+  }
+
+  /// Builds the entry for a library [name] that wasn't found as a
+  /// `<root>/<name>` subdirectory during the listing pass.
+  ///
+  /// On macOS/Linux the *release* library's Hive boxes sit directly in the
+  /// application-support directory — which is [root] itself — rather than in a
+  /// `daw_project_manager/` subdirectory (Windows does use a subdirectory).
+  /// So the release library never shows up in the subdir listing on those
+  /// platforms and would always read as "does not exist yet". Resolve it
+  /// against [root] here, and only call it real if it actually holds Hive
+  /// boxes ([root] always exists — path_provider creates it).
+  static DevLibrary _resolveKnownLibrary(Directory root, String name) {
+    final isRelease = name == defaultAppDataDirName;
+    final dir = (isRelease && !Platform.isWindows)
+        ? root
+        : Directory(p.join(root.path, name));
+
+    if (!dir.existsSync()) {
+      return DevLibrary(dirName: name, isRelease: isRelease, exists: false);
+    }
+    final inspected = _inspect(dir, name);
+    if (p.equals(dir.path, root.path) && inspected.totalBytes == 0) {
+      // `root` exists but holds no library yet — keep the "will be created
+      // empty" affordance rather than claiming a phantom library.
+      return DevLibrary(dirName: name, isRelease: isRelease, exists: false);
+    }
+    return inspected;
   }
 
   static DevLibrary _inspect(Directory dir, String name) {

@@ -55,7 +55,7 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer>
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const MobilePlayerPage()),
+        mobilePlayerPageRoute(),
       ),
       onHorizontalDragUpdate: _onDragUpdate,
       onHorizontalDragEnd: _onDragEnd,
@@ -64,7 +64,7 @@ class _MobileMiniPlayerState extends ConsumerState<MobileMiniPlayer>
         if (v < -300) {
           // swipe up → abrir full player
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const MobilePlayerPage()),
+            mobilePlayerPageRoute(),
           );
         } else if (v > 300 && !state.isPlaying) {
           // swipe down enquanto pausado → parar e esconder

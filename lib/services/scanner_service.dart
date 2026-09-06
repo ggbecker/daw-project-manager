@@ -69,6 +69,26 @@ class ScannerService {
     return _bundleExtensions.any((ext) => lower.endsWith(ext));
   }
 
+  /// Whether [path] is a DAW project stored as a directory "package bundle"
+  /// (Logic Pro `.logicx`, Universal Audio LUNA `.luna`, GarageBand `.band`)
+  /// rather than a single file. These are directories on disk but the OS
+  /// opens them like a file — so `open`ing one on macOS launches the DAW
+  /// instead of revealing its contents.
+  static bool isBundlePath(String path) => _isBundleDirectory(path);
+
+  /// The folder to reveal in the system file manager for a project located
+  /// at [projectPath]. A single-file project resolves to the file's parent
+  /// directory; a package-bundle project *also* resolves to the bundle's
+  /// parent, because revealing (or opening) the `.logicx`/`.luna`/`.band`
+  /// bundle itself just launches the DAW. Only a genuine loose-files project
+  /// folder returns itself.
+  static String projectContainingFolder(String projectPath) {
+    if (isBundlePath(projectPath)) return p.dirname(projectPath);
+    return FileSystemEntity.isDirectorySync(projectPath)
+        ? projectPath
+        : p.dirname(projectPath);
+  }
+
   static const _backupFolderNames = {
     'backup',               // Ableton Live, FL Studio, Cubase
     'auto-backups',         // Bitwig Studio

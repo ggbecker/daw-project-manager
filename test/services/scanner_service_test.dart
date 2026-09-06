@@ -46,6 +46,62 @@ void main() {
     });
   });
 
+  group('projectContainingFolder', () {
+    // Regression coverage for GitHub issue #142: "Open Folder" on a Logic Pro
+    // / LUNA project opened the project in the DAW instead of revealing its
+    // folder. Cause: the project's stored path IS the `.logicx`/`.luna`
+    // directory (a package bundle), and the old logic did "if it's a
+    // directory, open it as-is" — but `open`ing a bundle on macOS launches
+    // the DAW. A bundle must resolve to its *parent*, same as a single file.
+    late Directory tempDir;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('containing_folder_test_');
+    });
+    tearDown(() async {
+      if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    });
+
+    test('a .logicx bundle resolves to its parent folder, not itself', () async {
+      final logicx = Directory(p.join(tempDir.path, 'Song.logicx'));
+      await logicx.create();
+      expect(
+        ScannerService.projectContainingFolder(logicx.path),
+        tempDir.path,
+      );
+    });
+
+    test('a .luna bundle resolves to its parent folder', () async {
+      final luna = Directory(p.join(tempDir.path, 'Song.luna'));
+      await luna.create();
+      expect(ScannerService.projectContainingFolder(luna.path), tempDir.path);
+    });
+
+    test('a single-file project resolves to its parent folder', () async {
+      final flp = File(p.join(tempDir.path, 'Song.flp'));
+      await flp.writeAsString('x');
+      expect(ScannerService.projectContainingFolder(flp.path), tempDir.path);
+    });
+
+    test('a genuine loose-files project folder resolves to itself', () async {
+      final projectDir = Directory(p.join(tempDir.path, 'My Project'));
+      await projectDir.create();
+      expect(
+        ScannerService.projectContainingFolder(projectDir.path),
+        projectDir.path,
+      );
+    });
+
+    test('isBundlePath is case-insensitive and extension-anchored', () {
+      expect(ScannerService.isBundlePath('/x/Song.logicx'), isTrue);
+      expect(ScannerService.isBundlePath('/x/Song.LOGICX'), isTrue);
+      expect(ScannerService.isBundlePath('/x/Song.luna'), isTrue);
+      expect(ScannerService.isBundlePath('/x/Song.band'), isTrue);
+      expect(ScannerService.isBundlePath('/x/Song.als'), isFalse);
+      expect(ScannerService.isBundlePath('/x/logicx-notes.txt'), isFalse);
+    });
+  });
+
   group('newlyFoundPaths', () {
     // Regression coverage for the "New" badge (recentlyDiscoveredProjectsProvider)
     // now that both the initial scan and a manual rescan run without blocking

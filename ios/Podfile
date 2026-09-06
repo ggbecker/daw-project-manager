@@ -1,5 +1,8 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+# 14.0: ffmpeg_kit_flutter_new_audio's "audio" subspec requires iOS 14
+# (ss.ios.deployment_target). Keep this in sync with
+# IPHONEOS_DEPLOYMENT_TARGET in Runner.xcodeproj and the floor in
+# post_install below.
+platform :ios, '14.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -39,5 +42,11 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      # Floor every pod at the project's minimum so a pod that ships a lower
+      # default (or that CocoaPods leaves untouched) can't drag the build
+      # below what ffmpeg-kit needs.
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
   end
 end

@@ -30,6 +30,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get confirm => '确认';
 
   @override
+  String get undo => '撤销';
+
+  @override
   String get customInterval => '自定义';
 
   @override
