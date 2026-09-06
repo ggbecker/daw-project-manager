@@ -803,6 +803,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
           // Scheme selector
           Wrap(
             spacing: 8,
+            runSpacing: 8, // vertical gap when a chip wraps to a new line
             children: [
               _SchemeChip(
                 label: l10n.createProjectSchemeArtistTrack,
