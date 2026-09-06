@@ -2384,7 +2384,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        allowedExtensions: previewAudioExtensions,
         dialogTitle: l10n.selectPreviewSong,
       );
 
@@ -2471,7 +2471,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
 
   bool _isValidAudioFile(String filePath) {
     final ext = p.extension(filePath).toLowerCase();
-    return ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac'].contains(ext);
+    return MixdownDetectorService.audioExtensions.contains(ext);
   }
 
   Future<void> _handleDroppedFiles(List<String> filePaths) async {
@@ -2938,9 +2938,7 @@ class _PreviewSongPlayerState extends ConsumerState<_PreviewSongPlayer>
                             onPressed: () async {
                               final result = await FilePicker.pickFiles(
                                 type: FileType.custom,
-                                allowedExtensions: const [
-                                  'mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac',
-                                ],
+                                allowedExtensions: previewAudioExtensions,
                                 dialogTitle: AppLocalizations.of(context)!.selectPreviewSong,
                               );
                               if (result != null && result.files.single.path != null) {

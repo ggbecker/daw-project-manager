@@ -433,5 +433,46 @@ void main() {
         await dir.delete(recursive: true);
       }
     });
+
+    test('picks up an AIFF mixdown (.aif / .aiff)', () async {
+      final dir = await Directory.systemTemp.createTemp('daw_aiff_');
+      try {
+        final mixdownDir = Directory('${dir.path}/Mixdown');
+        await mixdownDir.create();
+        final file = File('${mixdownDir.path}/Bounce.aiff');
+        await file.create();
+
+        final project = TestFactories.makeProject(
+          filePath: '${dir.path}/project.logic',
+          dawType: null,
+        );
+        final result = MixdownDetectorService.findLatestMixdown(project);
+        expect(result?.path, contains('Bounce.aiff'));
+      } finally {
+        await dir.delete(recursive: true);
+      }
+    });
+  });
+
+  group('MixdownDetectorService.audioExtensions', () {
+    // AIFF is a first-class "song" format on macOS/iOS (AVFoundation) and via
+    // the desktop ffmpeg fallback. It must be in the shared set so the
+    // preview-song picker, drag-and-drop and release-file typing all accept
+    // it, not just mixdown auto-detection.
+    test('includes both .aif and .aiff', () {
+      expect(MixdownDetectorService.audioExtensions, containsAll(['.aif', '.aiff']));
+    });
+
+    test('audioPickerExtensions mirrors the set without leading dots', () {
+      expect(MixdownDetectorService.audioPickerExtensions, containsAll(['aif', 'aiff']));
+      expect(
+        MixdownDetectorService.audioPickerExtensions.every((e) => !e.startsWith('.')),
+        isTrue,
+      );
+      expect(
+        MixdownDetectorService.audioPickerExtensions.toSet(),
+        MixdownDetectorService.audioExtensions.map((e) => e.substring(1)).toSet(),
+      );
+    });
   });
 }

@@ -126,10 +126,12 @@ void main() {
 
   test('previewAudioExtensions covers every format the player can open', () {
     // The file picker filters on this list; a format missing here is a file
-    // the user physically cannot select as a replacement.
+    // the user physically cannot select as a replacement. AIFF (.aif/.aiff)
+    // plays natively on macOS/iOS and via the desktop ffmpeg fallback, so it
+    // must be selectable too.
     expect(
       previewAudioExtensions,
-      containsAll(<String>['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac']),
+      containsAll(<String>['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'aif', 'aiff']),
     );
   });
 }

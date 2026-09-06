@@ -6001,7 +6001,7 @@ class _PlutoProjectsTableState extends ConsumerState<_PlutoProjectsTable>
       if (!mounted || confirmed != true) return;
       final picked = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        allowedExtensions: previewAudioExtensions,
         dialogTitle: l10n.selectPreviewSong,
       );
       if (!mounted || picked == null || picked.files.single.path == null)
@@ -10344,7 +10344,7 @@ class _MobileProjectsListState extends ConsumerState<_MobileProjectsList> {
       if (!mounted || confirmed != true) return;
       final picked = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'],
+        allowedExtensions: previewAudioExtensions,
         dialogTitle: l10n.selectPreviewSong,
       );
       if (!mounted || picked == null || picked.files.single.path == null)
