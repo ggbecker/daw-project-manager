@@ -111,4 +111,26 @@ void main() {
       expect(launchTargetExists('${tmp.path}/does-not-exist.logicx'), isFalse);
     });
   });
+
+  // launchWithBinary on macOS has to route a `.app` bundle through
+  // `open -a` (a bundle is a directory, not an executable) but run a plain
+  // Windows/Linux binary directly. The Process call itself can't run in a
+  // unit test, so this pins the pure classifier that picks the route.
+  group('isMacOsAppBundlePath', () {
+    test('true for an application bundle path', () {
+      expect(isMacOsAppBundlePath('/Applications/Logic Pro.app'), isTrue);
+      expect(isMacOsAppBundlePath('/Applications/Ableton Live 12 Suite.APP'),
+          isTrue);
+      expect(isMacOsAppBundlePath('/Applications/REAPER.app/'), isTrue);
+    });
+
+    test('false for a plain executable', () {
+      expect(
+        isMacOsAppBundlePath(r'C:\Program Files\Ableton\Live 12\Ableton Live 12 Suite.exe'),
+        isFalse,
+      );
+      expect(isMacOsAppBundlePath('/opt/zrythm/zrythm'), isFalse);
+      expect(isMacOsAppBundlePath('/Applications/Logic Pro.app/Contents/MacOS/Logic Pro'), isFalse);
+    });
+  });
 }

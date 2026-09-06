@@ -5228,7 +5228,7 @@ abstract class AppLocalizations {
   /// No description provided for @dawLaunchCommandsSectionDescription.
   ///
   /// In en, this message translates to:
-  /// **'Linux has no reliable file-type association for most DAWs, so \"Launch in DAW\" needs to be told exactly which program to run for each one you use. Configure it once per DAW below — the app will use it for every project of that type from then on.'**
+  /// **'\"Launch in DAW\" normally hands the project to the system\'s default application. When that doesn\'t work, point it here at the exact DAW program to run — an executable on Windows and Linux (or an AppImage), or the .app on macOS — and the app will open projects of that type with it directly. On Linux this is usually required; on Windows and macOS it\'s a fallback for when the standard launch fails. You can add more than one location per DAW (e.g. two versions); the app asks which to use when you launch.'**
   String get dawLaunchCommandsSectionDescription;
 
   /// No description provided for @dawLaunchCommandNotConfigured.
@@ -5249,6 +5249,12 @@ abstract class AppLocalizations {
   /// **'Configure'**
   String get dawLaunchCommandConfigureButton;
 
+  /// No description provided for @dawLaunchCommandAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add location'**
+  String get dawLaunchCommandAddButton;
+
   /// No description provided for @dawLaunchCommandDialogTitle.
   ///
   /// In en, this message translates to:
@@ -5258,14 +5264,32 @@ abstract class AppLocalizations {
   /// No description provided for @dawLaunchCommandDialogBody.
   ///
   /// In en, this message translates to:
-  /// **'Point this at the {dawType} executable (or AppImage). The app will run it directly with the project file as its only argument.'**
+  /// **'Point this at the {dawType} program — an executable on Windows and Linux (or an AppImage), or the .app on macOS. The app will run it directly with the project file as its only argument.'**
   String dawLaunchCommandDialogBody(String dawType);
+
+  /// No description provided for @dawLaunchCommandDialogLaunchFailedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'DAW Project Manager couldn\'t open this project through the system. Point it at the {dawType} program below and it will try launching the project with it directly.'**
+  String dawLaunchCommandDialogLaunchFailedBanner(String dawType);
 
   /// No description provided for @dawLaunchCommandDialogMissingBanner.
   ///
   /// In en, this message translates to:
-  /// **'The previously configured location for {dawType} no longer exists:\n{path}'**
+  /// **'The saved location(s) for {dawType} no longer exist:\n{path}'**
   String dawLaunchCommandDialogMissingBanner(String dawType, String path);
+
+  /// No description provided for @dawLaunchPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which {dawType}?'**
+  String dawLaunchPickerTitle(String dawType);
+
+  /// No description provided for @dawLaunchPickerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which {dawType} location to open “{project}” with.'**
+  String dawLaunchPickerBody(String dawType, String project);
 
   /// No description provided for @dawLaunchCommandDialogDetectedHeading.
   ///
@@ -5302,18 +5326,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This file doesn\'t exist'**
   String get dawLaunchCommandDialogInvalidPath;
-
-  /// No description provided for @dawLaunchCommandRemoveConfirmTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove launch command?'**
-  String get dawLaunchCommandRemoveConfirmTitle;
-
-  /// No description provided for @dawLaunchCommandRemoveConfirmMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Remove the configured launch command for {dawType}? Launching a {dawType} project will fall back to the system default (which may not work).'**
-  String dawLaunchCommandRemoveConfirmMessage(String dawType);
 
   /// No description provided for @dawLaunchCommandsEmptyState.
   ///

@@ -51,9 +51,17 @@ class FileLauncher {
   static Future<bool> launchProject(String pathOrBookmark) async =>
       launch(pathOrBookmark, isFolder: false);
 
+  /// Whether [path] points at a launchable target on disk — a regular file
+  /// or a directory (a macOS `.app` / package bundle is a directory). Use
+  /// this instead of a bare `File(path).existsSync()` for DAW executable
+  /// overrides and project paths.
+  static bool targetExists(String path) => platform.launchTargetExists(path);
+
   /// Launch [projectPath] via a specific [binaryPath] directly, bypassing
-  /// the OS default-application handler entirely. Linux-only in practice —
-  /// see the "Launch in DAW" binary override in Settings.
+  /// the OS default-application handler entirely — see the "Launch in DAW"
+  /// executable override in Settings > DAW Locations. Always required on
+  /// Linux; a failure fallback on Windows/macOS. A macOS `.app` bundle is
+  /// launched via `open -a`.
   static Future<bool> launchWithBinary(
     String binaryPath,
     String projectPath,

@@ -64,7 +64,7 @@ enum SettingsSection {
   general,
   appearance,
   projectFolders,
-  // Linux-only — see Platform.isLinux gate in _sectionOrder().
+  // Desktop-only — see the MobileUtils.isDesktop() gate in _sectionOrder().
   dawLaunchCommands,
   mixdownFolders,
   phases,
@@ -965,9 +965,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         SettingsSection.general,
         SettingsSection.appearance,
         SettingsSection.projectFolders,
-        // Linux only — Windows/macOS already have working OS file
-        // association, so there's nothing for this section to do there.
-        if (Platform.isLinux) SettingsSection.dawLaunchCommands,
+        // Desktop only. On Linux this is usually required (no dependable OS
+        // file association for most DAWs); on Windows/macOS it's a fallback
+        // for when the standard "Launch in DAW" fails. Mobile has no DAW to
+        // point at.
+        if (MobileUtils.isDesktop()) SettingsSection.dawLaunchCommands,
         SettingsSection.mixdownFolders,
         SettingsSection.phases,
         SettingsSection.workSessions,
@@ -1065,7 +1067,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         _SearchEntry(SettingsSection.projectFolders, Icons.description_outlined, l10n.exportAllProjectsInfo, l10n.exportAllProjectsInfoSubtitle),
         _SearchEntry(SettingsSection.projectFolders, Icons.table_view_outlined, l10n.exportAllPartsCsv, l10n.exportAllPartsCsvSubtitle),
         _SearchEntry(SettingsSection.projectFolders, Icons.grid_on, l10n.exportAllPartsXlsx, l10n.exportAllPartsXlsxSubtitle),
-        if (Platform.isLinux) ...[
+        if (MobileUtils.isDesktop()) ...[
           _SearchEntry(SettingsSection.dawLaunchCommands, Icons.terminal_outlined, l10n.dawLaunchCommandsTabLabel, l10n.dawLaunchCommandsSectionDescription),
         ],
         _SearchEntry(SettingsSection.mixdownFolders, Icons.audio_file_outlined, l10n.mixdownFoldersTabLabel, l10n.mixdownFoldersSectionDescription),
@@ -1964,8 +1966,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Widget _buildDawLaunchCommandsSection(AppLocalizations l10n) {
-    final launchCommands =
-        ref.watch(dawLaunchCommandsProvider).value ?? const <String, String>{};
+    final launchCommands = ref.watch(dawLaunchCommandsProvider).value ??
+        const <String, List<String>>{};
     final projects = ref.watch(allProjectsStreamProvider).value ?? const [];
     final dawTypes =
         <String>{
@@ -1978,9 +1980,33 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.dawLaunchCommandsSectionDescription,
-          style: Theme.of(context).textTheme.bodySmall,
+        // Titled intro card. Kept separate from the DAW list below so more
+        // DAW Locations subsections can be added as their own cards later.
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.terminal_outlined),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.dawLaunchCommandsTabLabel,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.dawLaunchCommandsSectionDescription,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         if (dawTypes.isEmpty)
@@ -1995,12 +2021,23 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               children: [
                 for (final dawType in dawTypes) ...[
                   if (dawType != dawTypes.first) const Divider(height: 1),
-                  _DawLaunchCommandTile(
+                  _DawLaunchCommandGroup(
                     dawType: dawType,
-                    configuredPath: launchCommands[dawType],
+                    configuredPaths:
+                        launchCommands[dawType] ?? const <String>[],
                     notConfiguredLabel: l10n.dawLaunchCommandNotConfigured,
                     missingTooltip: l10n.dawLaunchCommandMissingTooltip,
-                    configureLabel: l10n.dawLaunchCommandConfigureButton,
+                    addLabel: l10n.dawLaunchCommandAddButton,
+                    removeTooltip: l10n.remove,
+                    onAdd: () => showDawLaunchCommandDialog(
+                      context,
+                      dawType: dawType,
+                    ),
+                    onRemovePath: (path) async {
+                      final repo = await ref.read(repositoryProvider.future);
+                      await repo.removeDawLaunchCommand(dawType, path);
+                      ref.invalidate(dawLaunchCommandsProvider);
+                    },
                   ),
                 ],
               ],
@@ -3220,59 +3257,106 @@ class _MixdownDawTile extends StatelessWidget {
   }
 }
 
-class _DawLaunchCommandTile extends StatelessWidget {
+/// One DAW's block in the DAW Locations list: its name, every configured
+/// override path (each with a "no longer exists" warning and a remove
+/// button), and an "Add location" action. A DAW with several paths makes the
+/// launcher ask which to use.
+class _DawLaunchCommandGroup extends StatelessWidget {
   final String dawType;
-  final String? configuredPath;
+  final List<String> configuredPaths;
   final String notConfiguredLabel;
   final String missingTooltip;
-  final String configureLabel;
+  final String addLabel;
+  final String removeTooltip;
+  final VoidCallback onAdd;
+  final Future<void> Function(String path) onRemovePath;
 
-  const _DawLaunchCommandTile({
+  const _DawLaunchCommandGroup({
     required this.dawType,
-    required this.configuredPath,
+    required this.configuredPaths,
     required this.notConfiguredLabel,
     required this.missingTooltip,
-    required this.configureLabel,
+    required this.addLabel,
+    required this.removeTooltip,
+    required this.onAdd,
+    required this.onRemovePath,
   });
 
   @override
   Widget build(BuildContext context) {
     final logoPath = getDawLogoPath(dawType);
-    final path = configuredPath;
-    final missing = path != null && !File(path).existsSync();
 
-    return ListTile(
-      leading: logoPath != null
-          ? Image.asset(logoPath, width: 24, height: 24)
-          : const Icon(Icons.piano_outlined),
-      title: Text(dawType),
-      subtitle: Text(
-        path ?? notConfiguredLabel,
-        style: Theme.of(context).textTheme.bodySmall,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (missing)
-            Tooltip(
-              message: missingTooltip,
-              child: Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.orange.shade400,
-                size: 20,
+          Row(
+            children: [
+              logoPath != null
+                  ? Image.asset(
+                      logoPath,
+                      width: 24,
+                      height: 24,
+                      errorBuilder: (context, error, stack) =>
+                          const Icon(Icons.piano_outlined),
+                    )
+                  : const Icon(Icons.piano_outlined),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  dawType,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ),
-            ),
-          const SizedBox(width: 8),
-          OutlinedButton(
-            onPressed: () => showDawLaunchCommandDialog(
-              context,
-              dawType: dawType,
-              currentPath: path,
-              pathMissing: missing,
-            ),
-            child: Text(configureLabel),
+              TextButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(addLabel),
+              ),
+            ],
           ),
+          if (configuredPaths.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 34, top: 2),
+              child: Text(
+                notConfiguredLabel,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            )
+          else
+            for (final path in configuredPaths)
+              Padding(
+                padding: const EdgeInsets.only(left: 34),
+                child: Row(
+                  children: [
+                    if (!FileLauncher.targetExists(path)) ...[
+                      Tooltip(
+                        message: missingTooltip,
+                        child: Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.orange.shade400,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: Text(
+                        path,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: removeTooltip,
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () => onRemovePath(path),
+                    ),
+                  ],
+                ),
+              ),
         ],
       ),
     );

@@ -113,8 +113,9 @@ final customMixdownFoldersByDawProvider =
       return repo.getCustomMixdownFoldersByDaw();
     });
 
-// Linux-only "Launch in DAW" binary overrides, keyed by DAW display name.
-final dawLaunchCommandsProvider = FutureProvider<Map<String, String>>((
+// "Launch in DAW" executable overrides (desktop), keyed by DAW display name,
+// each mapped to an ordered list of paths.
+final dawLaunchCommandsProvider = FutureProvider<Map<String, List<String>>>((
   ref,
 ) async {
   final repo = await ref.watch(repositoryProvider.future);

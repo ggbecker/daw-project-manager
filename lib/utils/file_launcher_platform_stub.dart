@@ -21,5 +21,8 @@ Future<String> createBookmarkForPath(String path) async => path;
 /// Launches the resolved path. Stub (e.g. web): no local file launch, returns false.
 Future<bool> launchResolvedPath(String path, bool isFolder) async => false;
 
+/// Stub (e.g. web): no filesystem to check, so nothing is launchable.
+bool launchTargetExists(String path) => false;
+
 /// Stub (e.g. web): no process launching, returns false.
 Future<bool> launchWithBinary(String binaryPath, String projectPath) async => false;

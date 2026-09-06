@@ -115,9 +115,22 @@ bool _shellExecuteOpen(String path) {
 /// starts. Both entity kinds are accepted regardless of the caller's
 /// `isFolder` hint — that hint only ever mattered for macOS bookmark
 /// resolution upstream, not here.
-@visibleForTesting
+///
+/// Also used for the "Launch in DAW" executable override: a configured macOS
+/// DAW path is a `.app` bundle, which is likewise a directory on disk.
 bool launchTargetExists(String path) =>
     File(path).existsSync() || Directory(path).existsSync();
+
+/// Whether [binaryPath] is a macOS application bundle (`Foo.app`), which is a
+/// directory that must be launched via `open -a` rather than executed
+/// directly.
+@visibleForTesting
+bool isMacOsAppBundlePath(String binaryPath) {
+  final trimmed = binaryPath.endsWith('/')
+      ? binaryPath.substring(0, binaryPath.length - 1)
+      : binaryPath;
+  return trimmed.toLowerCase().endsWith('.app');
+}
 
 /// Checks existence and launches the path with url_launcher, except for
 /// Windows paths containing '#' or '%' which go through [_shellExecuteOpen]
@@ -141,12 +154,30 @@ Future<bool> launchResolvedPath(String path, bool isFolder) async {
   return launched;
 }
 
-/// Runs [binaryPath] directly with [projectPath] as its sole argument —
-/// used on Linux when the user has registered a launch-command override for
-/// a DAW (see Settings), bypassing `xdg-open`/the MIME-association database
-/// entirely. Detached so the DAW process outlives this app if it's closed.
+/// Runs [binaryPath] with [projectPath] as its sole argument, bypassing the
+/// OS default-application handler (`xdg-open` / file association) entirely.
+/// Used when the user has registered a "Launch in DAW" executable override
+/// for a DAW (see Settings > DAW Locations) — on Linux where there's usually
+/// no working association, and on Windows/macOS as a fallback when the
+/// standard launch fails.
+///
+/// A macOS `.app` is a bundle directory, not an executable, so it goes
+/// through `open -a <app> <project>` and the exit code tells us whether the
+/// app could be launched. Everything else (Windows `.exe`, a Linux binary or
+/// AppImage, a raw macOS executable) is started detached so the DAW outlives
+/// this app if it's closed.
 Future<bool> launchWithBinary(String binaryPath, String projectPath) async {
   try {
+    if (Platform.isMacOS && isMacOsAppBundlePath(binaryPath)) {
+      final result = await Process.run(
+        'open',
+        ['-a', binaryPath, projectPath],
+      );
+      if (result.exitCode != 0 && kDebugMode) {
+        print('[FileLauncher] open -a failed (${result.exitCode}): ${result.stderr}');
+      }
+      return result.exitCode == 0;
+    }
     await Process.start(
       binaryPath,
       [projectPath],

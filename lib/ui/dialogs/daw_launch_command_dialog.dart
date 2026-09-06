@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,9 +14,11 @@ import '../../utils/file_launcher.dart';
 /// anything with the result; re-read [dawLaunchCommandsProvider] (or just
 /// retry the launch) to see the effect.
 ///
-/// Used both from Settings (edit/add an entry) and in-context, the first
-/// time "Launch in DAW" fails for a DAW with no override configured yet, or
-/// when a previously-configured binary no longer exists ([pathMissing]).
+/// Used both from Settings (edit/add an entry) and in-context: on Linux the
+/// first time "Launch in DAW" runs for a DAW with no override configured
+/// yet, on Windows/macOS after the standard launch actually failed
+/// ([launchFailed]), or on any platform when a previously-configured path no
+/// longer exists ([pathMissing]).
 /// When [project] is given (the in-context cases — Settings has no specific
 /// project to launch), the primary button reads "Save & Launch" and, once
 /// the path is saved, immediately launches [project] with it instead of
@@ -28,6 +28,7 @@ Future<void> showDawLaunchCommandDialog(
   required String dawType,
   String? currentPath,
   bool pathMissing = false,
+  bool launchFailed = false,
   MusicProject? project,
 }) {
   return showDialog<void>(
@@ -36,6 +37,7 @@ Future<void> showDawLaunchCommandDialog(
       dawType: dawType,
       currentPath: currentPath,
       pathMissing: pathMissing,
+      launchFailed: launchFailed,
       project: project,
     ),
   );
@@ -45,6 +47,7 @@ class DawLaunchCommandDialog extends ConsumerStatefulWidget {
   final String dawType;
   final String? currentPath;
   final bool pathMissing;
+  final bool launchFailed;
   final MusicProject? project;
 
   const DawLaunchCommandDialog({
@@ -52,6 +55,7 @@ class DawLaunchCommandDialog extends ConsumerStatefulWidget {
     required this.dawType,
     this.currentPath,
     this.pathMissing = false,
+    this.launchFailed = false,
     this.project,
   });
 
@@ -71,7 +75,12 @@ class _DawLaunchCommandDialogState
   @override
   void initState() {
     super.initState();
-    _pathController = TextEditingController(text: widget.currentPath ?? '');
+    // In "path missing" mode currentPath is the (possibly multi-line) list of
+    // broken paths shown in the banner, not something to prefill the field
+    // with. The dialog always *adds* a new location now.
+    _pathController = TextEditingController(
+      text: widget.pathMissing ? '' : (widget.currentPath ?? ''),
+    );
     _loadDetectedCandidates();
   }
 
@@ -109,13 +118,23 @@ class _DawLaunchCommandDialogState
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
     final path = _pathController.text.trim();
-    if (path.isEmpty || !File(path).existsSync()) {
+    if (path.isEmpty || !FileLauncher.targetExists(path)) {
       setState(() => _errorText = l10n.dawLaunchCommandDialogInvalidPath);
       return;
     }
     setState(() => _busy = true);
     final repo = await ref.read(repositoryProvider.future);
-    await repo.setDawLaunchCommand(widget.dawType, path);
+    await repo.addDawLaunchCommand(widget.dawType, path);
+    // "Fix it" flow: once a working location is added, drop the saved ones
+    // that no longer resolve so the DAW isn't left with dead entries.
+    if (widget.pathMissing) {
+      for (final stale in repo
+          .getDawLaunchCommandPaths(widget.dawType)
+          .where((p) => p != path && !FileLauncher.targetExists(p))
+          .toList()) {
+        await repo.removeDawLaunchCommand(widget.dawType, stale);
+      }
+    }
     ref.invalidate(dawLaunchCommandsProvider);
     if (!mounted) return;
 
@@ -141,39 +160,6 @@ class _DawLaunchCommandDialogState
         ),
       ),
     );
-  }
-
-  Future<void> _remove() async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(ctx).cardColor,
-        title: Text(l10n.dawLaunchCommandRemoveConfirmTitle),
-        content: Text(
-          l10n.dawLaunchCommandRemoveConfirmMessage(widget.dawType),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l10n.remove),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true || !mounted) return;
-
-    setState(() => _busy = true);
-    final repo = await ref.read(repositoryProvider.future);
-    await repo.setDawLaunchCommand(widget.dawType, null);
-    ref.invalidate(dawLaunchCommandsProvider);
-    if (!mounted) return;
-    Navigator.of(context).pop();
   }
 
   @override
@@ -213,6 +199,43 @@ class _DawLaunchCommandDialogState
                         l10n.dawLaunchCommandDialogMissingBanner(
                           widget.dawType,
                           widget.currentPath!,
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ] else if (widget.launchFailed) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.dawLaunchCommandDialogLaunchFailedBanner(
+                          widget.dawType,
                         ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
@@ -288,12 +311,6 @@ class _DawLaunchCommandDialogState
         ),
       ),
       actions: [
-        if (widget.currentPath != null)
-          TextButton(
-            onPressed: _busy ? null : _remove,
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(l10n.remove),
-          ),
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(),
           child: Text(l10n.cancel),

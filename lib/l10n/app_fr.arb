@@ -2072,10 +2072,11 @@
   "mixdownFoldersDefaultsLabel": "Dossiers vérifiés par défaut :",
   "mixdownFoldersCustomLabel": "Vos ajouts pour ce DAW :",
   "dawLaunchCommandsTabLabel": "DAW Locations",
-  "dawLaunchCommandsSectionDescription": "Linux has no reliable file-type association for most DAWs, so \"Launch in DAW\" needs to be told exactly which program to run for each one you use. Configure it once per DAW below — the app will use it for every project of that type from then on.",
+  "dawLaunchCommandsSectionDescription": "\"Launch in DAW\" normally hands the project to the system's default application. When that doesn't work, point it here at the exact DAW program to run — an executable on Windows and Linux (or an AppImage), or the .app on macOS — and the app will open projects of that type with it directly. On Linux this is usually required; on Windows and macOS it's a fallback for when the standard launch fails. You can add more than one location per DAW (e.g. two versions); the app asks which to use when you launch.",
   "dawLaunchCommandNotConfigured": "Not configured",
   "dawLaunchCommandMissingTooltip": "This location no longer exists",
   "dawLaunchCommandConfigureButton": "Configure",
+  "dawLaunchCommandAddButton": "Add location",
   "dawLaunchCommandDialogTitle": "Launch command for {dawType}",
   "@dawLaunchCommandDialogTitle": {
     "placeholders": {
@@ -2084,7 +2085,7 @@
       }
     }
   },
-  "dawLaunchCommandDialogBody": "Point this at the {dawType} executable (or AppImage). The app will run it directly with the project file as its only argument.",
+  "dawLaunchCommandDialogBody": "Point this at the {dawType} program — an executable on Windows and Linux (or an AppImage), or the .app on macOS. The app will run it directly with the project file as its only argument.",
   "@dawLaunchCommandDialogBody": {
     "placeholders": {
       "dawType": {
@@ -2092,7 +2093,15 @@
       }
     }
   },
-  "dawLaunchCommandDialogMissingBanner": "The previously configured location for {dawType} no longer exists:\n{path}",
+  "dawLaunchCommandDialogLaunchFailedBanner": "DAW Project Manager couldn't open this project through the system. Point it at the {dawType} program below and it will try launching the project with it directly.",
+  "@dawLaunchCommandDialogLaunchFailedBanner": {
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      }
+    }
+  },
+  "dawLaunchCommandDialogMissingBanner": "The saved location(s) for {dawType} no longer exist:\n{path}",
   "@dawLaunchCommandDialogMissingBanner": {
     "placeholders": {
       "dawType": {
@@ -2103,21 +2112,31 @@
       }
     }
   },
-  "dawLaunchCommandDialogDetectedHeading": "Detected on this system",
-  "dawLaunchCommandDialogManualHint": "/path/to/executable",
-  "dawLaunchCommandDialogBrowseButton": "Browse…",
-  "dawLaunchCommandDialogSaveButton": "Save",
-  "dawLaunchCommandDialogSaveAndLaunchButton": "Save & Launch",
-  "dawLaunchCommandDialogInvalidPath": "This file doesn't exist",
-  "dawLaunchCommandRemoveConfirmTitle": "Remove launch command?",
-  "dawLaunchCommandRemoveConfirmMessage": "Remove the configured launch command for {dawType}? Launching a {dawType} project will fall back to the system default (which may not work).",
-  "@dawLaunchCommandRemoveConfirmMessage": {
+  "dawLaunchPickerTitle": "Which {dawType}?",
+  "@dawLaunchPickerTitle": {
     "placeholders": {
       "dawType": {
         "type": "String"
       }
     }
   },
+  "dawLaunchPickerBody": "Choose which {dawType} location to open “{project}” with.",
+  "@dawLaunchPickerBody": {
+    "placeholders": {
+      "dawType": {
+        "type": "String"
+      },
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "dawLaunchCommandDialogDetectedHeading": "Detected on this system",
+  "dawLaunchCommandDialogManualHint": "/path/to/executable",
+  "dawLaunchCommandDialogBrowseButton": "Browse…",
+  "dawLaunchCommandDialogSaveButton": "Save",
+  "dawLaunchCommandDialogSaveAndLaunchButton": "Save & Launch",
+  "dawLaunchCommandDialogInvalidPath": "This file doesn't exist",
   "dawLaunchCommandsEmptyState": "DAWs will appear here once you scan projects for them.",
   "dawInfoLabel": "DAW : {daw}",
   "@dawInfoLabel": {
