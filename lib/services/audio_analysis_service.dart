@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
-import 'dart:typed_data';
+import 'package:ffmpeg_kit_flutter_new_audio/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_audio/return_code.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show MethodChannel;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -188,9 +188,26 @@ class AudioAnalysisService {
   @visibleForTesting
   static Future<bool> Function(List<String> args)? ffmpegRunnerOverride;
 
+  /// Whether ffmpeg has to run in-process rather than as a subprocess.
+  /// Android and iOS forbid spawning arbitrary executables, so [Process.run]
+  /// there fails silently — which is why a WAV bounce used to go out
+  /// unconverted and get dropped by the receiving app.
+  static bool get _usesInProcessFfmpeg => Platform.isAndroid || Platform.isIOS;
+
   static Future<bool> _runFfmpeg(List<String> args) async {
     final override = ffmpegRunnerOverride;
     if (override != null) return override(args);
+
+    if (_usesInProcessFfmpeg) {
+      final session = await FFmpegKit.executeWithArguments(args);
+      final returnCode = await session.getReturnCode();
+      if (ReturnCode.isSuccess(returnCode)) return true;
+      debugPrint(
+        '[ShareConvert] ffmpeg-kit failed (${returnCode?.getValue()}): '
+        '${await session.getOutput()}',
+      );
+      return false;
+    }
 
     final result = await Process.run(await _resolveFfmpegCommand(), args);
     if (result.exitCode == 0) return true;
@@ -198,74 +215,13 @@ class AudioAnalysisService {
     return false;
   }
 
-  /// Platform channel implemented natively on both mobile platforms:
-  /// `AudioShareConverter.kt` (MediaCodec) on Android and
-  /// `AudioShareConverter.swift` (AVAssetExportSession) on iOS. Same channel
-  /// name, method and arguments on each, so Dart has one path for both.
-  static const MethodChannel _mobileConvertChannel = MethodChannel(
-    'com.bandpassrecords.dpm/audio_convert',
-  );
-
-  /// Test seam for the native mobile transcode. Production leaves this null
-  /// and goes over [_mobileConvertChannel]. Reset to null in `tearDown`.
-  @visibleForTesting
-  static Future<void> Function(String input, String output)?
-      mobileConverterOverride;
-
-  /// Transcodes to AAC/`.m4a` using the OS's own encoder, since neither
-  /// mobile platform can spawn an ffmpeg subprocess (`Process.run` failed
-  /// silently on Android, which is why WAV bounces went out unconverted and
-  /// got dropped by the receiving app, leaving only the message text).
-  ///
-  /// AAC rather than MP3 because neither Android nor Apple ships an MP3
-  /// *encoder* — the same reason the macOS branch below produces `.m4a` via
-  /// afconvert, so `.m4a` is a format this app already sends.
-  ///
-  /// Visible for testing because [convertForSharing] only routes here on
-  /// Android or iOS, which no test host satisfies.
-  @visibleForTesting
-  static Future<File?> convertWithMobileCodec(
-    String inputPath,
-    String outputDir,
-  ) async {
-    final base = p.basenameWithoutExtension(inputPath);
-    var outPath = p.join(outputDir, '$base.m4a');
-    if (p.equals(outPath, inputPath)) {
-      outPath = p.join(outputDir, '${base}_share.m4a');
-    }
-
-    try {
-      final override = mobileConverterOverride;
-      if (override != null) {
-        await override(inputPath, outPath);
-      } else {
-        await _mobileConvertChannel.invokeMethod<String>('toM4a', {
-          'input': inputPath,
-          'output': outPath,
-        });
-      }
-    } catch (e) {
-      // Android's MediaExtractor cannot open AIFF, so that input legitimately
-      // lands here (AVFoundation on iOS can). The caller falls back to
-      // sharing the original file.
-      debugPrint('[ShareConvert] native transcode failed: $e');
-      return null;
-    }
-
-    final out = File(outPath);
-    if (await out.exists() && await out.length() > 0) return out;
-    debugPrint('[ShareConvert] native transcode produced nothing at $outPath');
-    return null;
-  }
-
   /// Converts [inputPath] to a messaging-app-compatible file inside
-  /// [outputDir], using whatever encoder the current OS already has — no
-  /// platform gets a new redistributable for this:
+  /// [outputDir], using whatever encoder is available on the current OS:
   /// - macOS: AAC/M4A via `afconvert`, which ships with every Mac (Apple's
   ///   frameworks have never included an MP3 encoder).
-  /// - Android and iOS: AAC/M4A over a platform channel — MediaCodec and
-  ///   AVAssetExportSession respectively — for the same reason, neither OS
-  ///   has an MP3 encoder, and neither can spawn an ffmpeg subprocess.
+  /// - Android / iOS: MP3 via the bundled ffmpeg-kit library, in-process
+  ///   (neither OS can spawn an ffmpeg subprocess, and MediaCodec's AAC
+  ///   encoder refuses raw-PCM input on newer Android — see pubspec.yaml).
   /// - Windows: MP3 via the ffmpeg binary bundled with the app, falling
   ///   back to PATH for dev builds without it.
   /// - Linux: MP3 via ffmpeg on PATH (soft dependency).
@@ -276,10 +232,6 @@ class AudioAnalysisService {
   static Future<File?> convertForSharing(String inputPath, String outputDir) async {
     final base = p.basenameWithoutExtension(inputPath);
     Directory(outputDir).createSync(recursive: true);
-
-    if (Platform.isAndroid || Platform.isIOS) {
-      return convertWithMobileCodec(inputPath, outputDir);
-    }
 
     if (Platform.isMacOS) {
       final outPath = p.join(outputDir, '$base.m4a');

@@ -56,11 +56,10 @@ void main() {
   });
 
   group('AudioAnalysisService.convertForSharing', () {
-    // These assertions cover the ffmpeg branch (Windows/Linux). macOS takes
-    // the afconvert branch and Android/iOS the native channel, neither of
-    // which goes through ffmpegRunnerOverride.
-    final onFfmpegPlatform =
-        !Platform.isMacOS && !Platform.isAndroid && !Platform.isIOS;
+    // These assertions cover the ffmpeg branch (Windows/Linux, plus Android/
+    // iOS in-process via ffmpeg-kit) — all of which go through
+    // ffmpegRunnerOverride. macOS takes the afconvert branch instead.
+    final onFfmpegPlatform = !Platform.isMacOS;
 
     late Directory tempDir;
     late File input;
@@ -73,7 +72,6 @@ void main() {
 
     tearDown(() async {
       AudioAnalysisService.ffmpegRunnerOverride = null;
-      AudioAnalysisService.mobileConverterOverride = null;
       if (await tempDir.exists()) await tempDir.delete(recursive: true);
     });
 
@@ -344,101 +342,4 @@ void main() {
     });
   });
 
-  group('AudioAnalysisService.convertWithMobileCodec', () {
-    late Directory tempDir;
-    late File input;
-
-    setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('mobile_convert_test_');
-      input = File(p.join(tempDir.path, 'My Track.wav'));
-      await input.writeAsBytes(List<int>.filled(64, 0));
-    });
-
-    tearDown(() async {
-      AudioAnalysisService.mobileConverterOverride = null;
-      if (await tempDir.exists()) await tempDir.delete(recursive: true);
-    });
-
-    test('produces an .m4a, since neither mobile OS has an MP3 encoder', () async {
-      String? seenInput;
-      String? seenOutput;
-      AudioAnalysisService.mobileConverterOverride = (i, o) async {
-        seenInput = i;
-        seenOutput = o;
-        await File(o).writeAsString('fake aac');
-      };
-
-      final out = await AudioAnalysisService.convertWithMobileCodec(
-        input.path,
-        tempDir.path,
-      );
-
-      expect(out, isNotNull);
-      expect(p.basename(out!.path), 'My Track.m4a');
-      expect(seenInput, input.path);
-      expect(seenOutput, out.path);
-    });
-
-    test('returns null when the native transcode throws', () async {
-      // MediaExtractor cannot open AIFF, so this is a real input case, not
-      // just defensive coding.
-      AudioAnalysisService.mobileConverterOverride =
-          (_, _) async => throw Exception('MediaExtractor: setDataSource failed');
-
-      expect(
-        await AudioAnalysisService.convertWithMobileCodec(
-          input.path,
-          tempDir.path,
-        ),
-        isNull,
-      );
-    });
-
-    test('treats a zero-byte result as a failure', () async {
-      AudioAnalysisService.mobileConverterOverride =
-          (_, o) async => File(o).create();
-
-      expect(
-        await AudioAnalysisService.convertWithMobileCodec(
-          input.path,
-          tempDir.path,
-        ),
-        isNull,
-      );
-    });
-
-    test('returns null when the native side writes nothing at all', () async {
-      AudioAnalysisService.mobileConverterOverride = (_, _) async {};
-
-      expect(
-        await AudioAnalysisService.convertWithMobileCodec(
-          input.path,
-          tempDir.path,
-        ),
-        isNull,
-      );
-    });
-
-    test('never writes the output over its own input', () async {
-      // An .m4a source staged in the share cache would otherwise resolve to
-      // the identical path, and the muxer truncates before writing.
-      final m4aInput = File(p.join(tempDir.path, 'Bounce.m4a'));
-      await m4aInput.writeAsString('original audio');
-
-      String? seenOutput;
-      AudioAnalysisService.mobileConverterOverride = (_, o) async {
-        seenOutput = o;
-        await File(o).writeAsString('converted');
-      };
-
-      final out = await AudioAnalysisService.convertWithMobileCodec(
-        m4aInput.path,
-        tempDir.path,
-      );
-
-      expect(seenOutput, isNot(m4aInput.path));
-      expect(out, isNotNull);
-      expect(await m4aInput.readAsString(), 'original audio');
-    });
-  });
 }
