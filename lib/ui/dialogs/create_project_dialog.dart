@@ -53,25 +53,6 @@ String buildRemixFolderName({
   return '$datePrefix$artist - $trackName$suffix';
 }
 
-/// The value the primary-artist field should keep when the user switches the
-/// naming scheme *to* remix.
-///
-/// In every other scheme that field is the profile's own artist and is
-/// auto-populated with the profile name. Under remix the same field means the
-/// *original* track's artist — someone else — so a carried-over profile-name
-/// auto-fill must be dropped, or a new remix silently credits the original
-/// song to you. Anything the user actually typed is left alone.
-@visibleForTesting
-String primaryArtistWhenSwitchingToRemix(String current, String? profileName) {
-  final trimmed = current.trim();
-  if (profileName != null &&
-      trimmed.isNotEmpty &&
-      trimmed == profileName.trim()) {
-    return '';
-  }
-  return current;
-}
-
 class CreateProjectDialog extends ConsumerStatefulWidget {
   /// Pre-selects a template and jumps straight to the template flow — used
   /// by "Use as new project" on [ProjectTemplatesPage] so the user doesn't
@@ -94,7 +75,14 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
 
   // Step 2: Naming
   _NamingScheme _scheme = _NamingScheme.artistTrack;
+  // The profile's own artist name (auto-filled from the profile), used by the
+  // artist/collab schemes.
   final _primaryArtistController = TextEditingController();
+  // The *original* track's artist — remix scheme only. Kept separate from
+  // _primaryArtistController so switching schemes never bleeds the profile
+  // name into "original artist", or the original artist back into the
+  // profile-artist field.
+  final _originalArtistController = TextEditingController();
   final _trackNameController = TextEditingController();
   final _customNameController = TextEditingController();
   final List<TextEditingController> _collabControllers = [];
@@ -140,6 +128,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
     _remixArtistControllers.add(TextEditingController());
     _trackNameController.addListener(_onNameChanged);
     _primaryArtistController.addListener(_onNameChanged);
+    _originalArtistController.addListener(_onNameChanged);
     _customNameController.addListener(_onNameChanged);
     _templateSearchController.addListener(() {
       setState(
@@ -160,6 +149,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
   void dispose() {
     _pageController.dispose();
     _primaryArtistController.dispose();
+    _originalArtistController.dispose();
     _trackNameController.dispose();
     _customNameController.dispose();
     _templateSearchController.dispose();
@@ -221,7 +211,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
 
       case _NamingScheme.remix:
         return buildRemixFolderName(
-          originalArtist: _primaryArtistController.text,
+          originalArtist: _originalArtistController.text,
           track: track,
           remixerNames: _remixArtistControllers.map((c) => c.text).toList(),
           datePrefix: datePrefix,
@@ -602,11 +592,12 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
       });
     }
 
-    // Pre-fill primary artist from profile name — not for the remix scheme,
-    // where this field means the ORIGINAL track's artist, not the profile.
-    if (_scheme != _NamingScheme.remix &&
-        _primaryArtistController.text.isEmpty &&
-        profile?.name != null) {
+    // Pre-fill the profile-artist field from the profile name. It has its own
+    // controller (the remix "original artist" field is _originalArtist
+    // controller), so this is safe to do regardless of the current scheme —
+    // switching back to artist/collab always shows the profile name again,
+    // while anything the user typed over it is left alone.
+    if (_primaryArtistController.text.isEmpty && profile?.name != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _primaryArtistController.text.isEmpty) {
           _primaryArtistController.text = profile!.name;
@@ -849,16 +840,6 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
                 label: l10n.createProjectSchemeRemix,
                 selected: _scheme == _NamingScheme.remix,
                 onTap: () => setState(() {
-                  // The primary-artist field is auto-filled with the profile
-                  // name in the other schemes; under remix it means the
-                  // original track's artist, so drop a carried-over auto-fill.
-                  final fixed = primaryArtistWhenSwitchingToRemix(
-                    _primaryArtistController.text,
-                    ref.read(currentProfileProvider).value?.name,
-                  );
-                  if (fixed != _primaryArtistController.text) {
-                    _primaryArtistController.text = fixed;
-                  }
                   _scheme = _NamingScheme.remix;
                   _validateFolderName();
                 }),
@@ -1009,7 +990,7 @@ class _CreateProjectDialogState extends ConsumerState<CreateProjectDialog> {
             ),
           ] else if (_scheme == _NamingScheme.remix) ...[
             TextField(
-              controller: _primaryArtistController,
+              controller: _originalArtistController,
               decoration: InputDecoration(
                 labelText: l10n.createProjectOriginalArtist,
                 border: const OutlineInputBorder(),
